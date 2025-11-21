@@ -1,19 +1,17 @@
-version: '3.8'
-
 services:
   bible-bot:
     build: .
     container_name: telegram-bible-bot
     restart: unless-stopped
-    env_file:
-      - .env
+    # env_file is optional - if .env exists, it will be used
+    # Otherwise, use the default token in environment section below
     volumes:
-      # Mount .env file if you want to edit it without rebuilding
-      - ./.env:/app/.env:ro
       # Persist user subscriptions
       - ./subscribed_users.json:/app/subscribed_users.json
     environment:
       - TZ=GMT
+      # Bot token can be set here or in .env file
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-8410859508:AAEVHpQlqkPDSglcCz16xrlhtx-wOIdlZOE}
     # Health check
     healthcheck:
       test: ["CMD", "python3", "-c", "import sys; sys.exit(0)"]
