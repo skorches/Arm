@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  bible-bot:
+    build: .
+    container_name: telegram-bible-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      # Mount .env file if you want to edit it without rebuilding
+      - ./.env:/app/.env:ro
+    environment:
+      - TZ=GMT
+    # Health check
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import sys; sys.exit(0)"]
+      interval: 1h
+      timeout: 10s
+      retries: 3
+

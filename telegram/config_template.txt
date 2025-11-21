@@ -1,0 +1,14 @@
+# Telegram Bot Configuration Template
+# Copy this file to .env and fill in your actual values
+
+# Get your bot token from @BotFather on Telegram
+TELEGRAM_BOT_TOKEN=your_bot_token_here
+
+# Chat ID where messages will be sent
+# You can get this by messaging your bot and checking the logs,
+# or use @userinfobot to get your user ID
+TELEGRAM_CHAT_ID=your_chat_id_here
+
+# Optional: Bible API Key (if you want to use ESV API)
+# BIBLE_API_KEY=your_api_key_here
+
