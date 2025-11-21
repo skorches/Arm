@@ -13,8 +13,9 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 from telegram.error import TelegramError
 from dotenv import load_dotenv
-from reading_plan import get_reading_for_day
+from reading_plan import get_reading_for_day, READING_PLANS
 from user_storage import add_user, remove_user, is_subscribed, get_all_subscribed_users
+from bible_books import expand_bible_reading, BIBLE_BOOK_ABBREVIATIONS
 
 # Load environment variables
 load_dotenv()
@@ -42,6 +43,7 @@ class BibleVerseBot:
         self.application.add_handler(CommandHandler("subscribe", self.subscribe_command))
         self.application.add_handler(CommandHandler("unsubscribe", self.unsubscribe_command))
         self.application.add_handler(CommandHandler("status", self.status_command))
+        self.application.add_handler(CommandHandler("search", self.search_command))
         
         # Message handler for queries (non-command messages)
         self.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_query))
@@ -60,6 +62,9 @@ class BibleVerseBot:
         if not reading:
             logger.warning(f"No reading found for day {day_number}")
             return "Reading not available for this day"
+        
+        # Convert abbreviations to full names
+        reading = expand_bible_reading(reading)
         
         return reading
     
@@ -124,9 +129,10 @@ I'll help you read through the Bible in 365 days.
 /start - Show this welcome message
 /today - Get today's reading
 /day [number] - Get reading for a specific day (1-365)
+/search [book] - Search for a Bible book in the reading plan
 /subscribe - Subscribe to daily messages at 4:00 AM GMT
 /unsubscribe - Unsubscribe from daily messages
-/status - Check your subscription status
+/status - Check your subscription status and progress
 /help - Show all commands
 
 *Try it now:*
@@ -144,9 +150,14 @@ Send /today to see today's reading!"""
 /day [number] - Get reading for a specific day
   Example: /day 45
 
+/search [book] - Search for a Bible book
+  Example: /search Genesis
+  Example: /search Matthew
+  Example: /search Psalms
+
 /subscribe - Subscribe to daily messages (sent at 4:00 AM GMT)
 /unsubscribe - Stop receiving daily messages
-/status - Check if you're subscribed
+/status - Check your subscription status and progress
 
 *Queries:*
 You can also ask questions like:
@@ -209,14 +220,36 @@ This bot follows a complete Bible in a Year reading plan, combining Old Testamen
     async def subscribe_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle /subscribe command"""
         user_id = update.effective_user.id
+        user = update.effective_user
         
         if is_subscribed(user_id):
-            await update.message.reply_text("✅ You're already subscribed to daily messages!")
+            day_number, date_str = self.get_day_of_year()
+            await update.message.reply_text(
+                f"✅ *You're already subscribed!*\n\n"
+                f"Hi {user.first_name}, you're receiving daily Bible readings.\n\n"
+                f"📅 *Current Progress:*\n"
+                f"Today is Day {day_number} of 365\n"
+                f"Date: {date_str}\n\n"
+                f"⏰ *Schedule:*\n"
+                f"You'll receive a message every day at 4:00 AM GMT with that day's reading.\n\n"
+                f"Use /unsubscribe to stop receiving daily messages."
+            )
         else:
             if add_user(user_id):
+                day_number, date_str = self.get_day_of_year()
                 await update.message.reply_text(
-                    "✅ You've been subscribed to daily Bible readings!\n\n"
-                    "You'll receive a message every day at 4:00 AM GMT with that day's reading."
+                    f"✅ *Successfully Subscribed!*\n\n"
+                    f"Hi {user.first_name}, you've been subscribed to daily Bible readings!\n\n"
+                    f"📅 *Current Progress:*\n"
+                    f"Today is Day {day_number} of 365\n"
+                    f"Date: {date_str}\n\n"
+                    f"⏰ *Schedule:*\n"
+                    f"You'll receive a message every day at 4:00 AM GMT with that day's reading.\n\n"
+                    f"📖 *What to Expect:*\n"
+                    f"• Daily Bible reading assignments\n"
+                    f"• Words of encouragement\n"
+                    f"• Progress tracking (Day X of 365)\n\n"
+                    f"Use /unsubscribe anytime to stop receiving messages."
                 )
                 logger.info(f"User {user_id} subscribed")
             else:
@@ -238,17 +271,133 @@ This bot follows a complete Bible in a Year reading plan, combining Old Testamen
     async def status_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle /status command"""
         user_id = update.effective_user.id
+        user = update.effective_user
+        day_number, date_str = self.get_day_of_year()
+        
+        # Calculate progress percentage
+        progress_percent = round((day_number / 365) * 100, 1)
+        days_remaining = 365 - day_number
         
         if is_subscribed(user_id):
-            await update.message.reply_text(
-                "✅ You are subscribed to daily messages.\n\n"
-                "You'll receive Bible readings every day at 4:00 AM GMT."
-            )
+            status_message = f"""📊 *Your Status*
+
+👤 *User:* {user.first_name}
+✅ *Subscription:* Active
+
+📅 *Current Progress:*
+• Day {day_number} of 365
+• Date: {date_str}
+• Progress: {progress_percent}%
+• Days remaining: {days_remaining}
+
+⏰ *Daily Messages:*
+• Time: 4:00 AM GMT
+• Status: ✅ Receiving
+
+📖 *Quick Actions:*
+• /today - Get today's reading
+• /day [number] - Get specific day
+• /search [book] - Find a Bible book
+• /unsubscribe - Stop daily messages"""
         else:
+            status_message = f"""📊 *Your Status*
+
+👤 *User:* {user.first_name}
+❌ *Subscription:* Not Active
+
+📅 *Current Progress:*
+• Day {day_number} of 365
+• Date: {date_str}
+• Progress: {progress_percent}%
+• Days remaining: {days_remaining}
+
+⏰ *Daily Messages:*
+• Status: ❌ Not receiving
+
+💡 *Get Started:*
+Use /subscribe to start receiving daily Bible readings at 4:00 AM GMT!
+
+📖 *Try These Commands:*
+• /today - Get today's reading
+• /day [number] - Get specific day
+• /search [book] - Find a Bible book"""
+        
+        await update.message.reply_text(status_message, parse_mode='Markdown')
+    
+    async def search_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /search command - search for Bible books in the reading plan"""
+        if not context.args:
             await update.message.reply_text(
-                "❌ You are not subscribed to daily messages.\n\n"
-                "Use /subscribe to start receiving daily readings!"
+                "🔍 *Search for Bible Books*\n\n"
+                "Usage: /search [book name]\n\n"
+                "Examples:\n"
+                "• /search Genesis\n"
+                "• /search Matthew\n"
+                "• /search Psalms\n"
+                "• /search Revelation\n\n"
+                "You can search by full name or abbreviation (e.g., 'Gen', 'Mt', 'Ps').",
+                parse_mode='Markdown'
             )
+            return
+        
+        search_term = ' '.join(context.args).lower().strip()
+        current_year = datetime.now().year
+        plan = READING_PLANS.get(current_year, READING_PLANS[max(READING_PLANS.keys())])
+        
+        # Find matching books (both full names and abbreviations)
+        matching_books = []
+        for abbrev, full_name in BIBLE_BOOK_ABBREVIATIONS.items():
+            if (search_term in full_name.lower() or 
+                search_term in abbrev.lower().replace('.', '') or
+                abbrev.lower().replace('.', '') in search_term):
+                matching_books.append((abbrev, full_name))
+        
+        if not matching_books:
+            await update.message.reply_text(
+                f"❌ No Bible book found matching '{search_term}'.\n\n"
+                "Try searching for:\n"
+                "• Genesis, Exodus, Leviticus, Numbers, Deuteronomy\n"
+                "• Matthew, Mark, Luke, John\n"
+                "• Psalms, Proverbs, Revelation\n"
+                "• Or use abbreviations like 'Gen', 'Mt', 'Ps'"
+            )
+            return
+        
+        # Search for days containing these books
+        found_days = []
+        for day_num, reading in plan.items():
+            reading_lower = reading.lower()
+            for abbrev, full_name in matching_books:
+                # Check if abbreviation or full name appears in reading
+                if abbrev.lower() in reading_lower or full_name.lower() in reading_lower:
+                    found_days.append((day_num, reading))
+                    break
+        
+        if not found_days:
+            await update.message.reply_text(
+                f"❌ No readings found for '{matching_books[0][1]}' in the current reading plan."
+            )
+            return
+        
+        # Format results (limit to first 20 to avoid message too long)
+        results = found_days[:20]
+        book_names = [full_name for _, full_name in matching_books]
+        book_display = book_names[0] if len(book_names) == 1 else f"{', '.join(book_names[:3])}"
+        
+        result_text = f"🔍 *Search Results: {book_display}*\n\n"
+        result_text += f"Found in {len(found_days)} day(s):\n\n"
+        
+        for day_num, reading in results:
+            expanded_reading = expand_bible_reading(reading)
+            result_text += f"*Day {day_num}:* {expanded_reading}\n"
+        
+        if len(found_days) > 20:
+            result_text += f"\n... and {len(found_days) - 20} more day(s)"
+        
+        result_text += f"\n\n💡 Use /day [number] to get the full reading for any day."
+        
+        await update.message.reply_text(result_text, parse_mode='Markdown')
+        logger.info(f"User {update.effective_user.id} searched for '{search_term}', found {len(found_days)} results")
     
     async def handle_query(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle text queries (non-command messages)"""
