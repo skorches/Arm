@@ -258,15 +258,46 @@ This bot follows a complete Bible in a Year reading plan, combining Old Testamen
     async def unsubscribe_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle /unsubscribe command"""
         user_id = update.effective_user.id
+        user = update.effective_user
         
-        if not is_subscribed(user_id):
-            await update.message.reply_text("You're not currently subscribed to daily messages.")
-        else:
-            if remove_user(user_id):
-                await update.message.reply_text("✅ You've been unsubscribed from daily messages.")
-                logger.info(f"User {user_id} unsubscribed")
+        try:
+            if not is_subscribed(user_id):
+                await update.message.reply_text(
+                    f"ℹ️ *Not Subscribed*\n\n"
+                    f"Hi {user.first_name}, you're not currently subscribed to daily messages.\n\n"
+                    f"Use /subscribe to start receiving daily Bible readings!"
+                )
             else:
-                await update.message.reply_text("❌ There was an error unsubscribing. Please try again.")
+                if remove_user(user_id):
+                    day_number, date_str = self.get_day_of_year()
+                    await update.message.reply_text(
+                        f"✅ *Successfully Unsubscribed!*\n\n"
+                        f"Hi {user.first_name}, you've been unsubscribed from daily Bible readings.\n\n"
+                        f"📅 *Current Progress:*\n"
+                        f"Today is Day {day_number} of 365\n"
+                        f"Date: {date_str}\n\n"
+                        f"⏰ *Daily Messages:*\n"
+                        f"You will no longer receive automatic daily messages.\n\n"
+                        f"💡 *You can still:*\n"
+                        f"• Use /today to get today's reading\n"
+                        f"• Use /day [number] for any day\n"
+                        f"• Use /search [book] to find readings\n\n"
+                        f"Use /subscribe anytime to start receiving daily messages again!"
+                    )
+                    logger.info(f"User {user_id} unsubscribed")
+                else:
+                    await update.message.reply_text(
+                        "❌ *Error Unsubscribing*\n\n"
+                        "There was an error processing your unsubscribe request.\n"
+                        "Please try again or contact support."
+                    )
+                    logger.error(f"Failed to unsubscribe user {user_id}")
+        except Exception as e:
+            logger.error(f"Error in unsubscribe_command: {e}")
+            await update.message.reply_text(
+                "❌ *Error*\n\n"
+                "An unexpected error occurred. Please try again."
+            )
     
     async def status_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle /status command"""
