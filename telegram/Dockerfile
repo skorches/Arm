@@ -20,6 +20,9 @@ COPY . .
 ENV TZ=GMT
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# Run the scheduler
-CMD ["python3", "scheduler.py"]
+# Make startup script executable
+RUN chmod +x start.sh
+
+# Run both bot and scheduler
+CMD ["./start.sh"]
 

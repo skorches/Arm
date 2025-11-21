@@ -36,3 +36,6 @@ wheels/
 # Logs
 *.log
 
+# User storage
+subscribed_users.json
+

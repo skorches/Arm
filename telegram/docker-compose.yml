@@ -10,6 +10,8 @@ services:
     volumes:
       # Mount .env file if you want to edit it without rebuilding
       - ./.env:/app/.env:ro
+      # Persist user subscriptions
+      - ./subscribed_users.json:/app/subscribed_users.json
     environment:
       - TZ=GMT
     # Health check

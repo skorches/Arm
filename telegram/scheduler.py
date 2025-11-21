@@ -17,21 +17,21 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 def run_bot():
-    """Run the bot script"""
+    """Run the daily sender script"""
     try:
-        logger.info(f"Running bot at {datetime.now()}")
+        logger.info(f"Running daily sender at {datetime.now()}")
         result = subprocess.run(
-            ['python3', 'bot.py'],
+            ['python3', 'daily_sender.py'],
             cwd='/home/wars09/Cursor/Arm/telegram',
             capture_output=True,
             text=True
         )
         if result.returncode == 0:
-            logger.info("Bot executed successfully")
+            logger.info("Daily messages sent successfully")
         else:
-            logger.error(f"Bot execution failed: {result.stderr}")
+            logger.error(f"Daily sender failed: {result.stderr}")
     except Exception as e:
-        logger.error(f"Error running bot: {e}")
+        logger.error(f"Error running daily sender: {e}")
 
 def main():
     """Main scheduler function"""
