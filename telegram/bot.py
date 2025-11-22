@@ -240,9 +240,6 @@ This bot follows a complete Bible in a Year reading plan, combining Old Testamen
                 await update.message.reply_text(
                     f"✅ *Successfully Subscribed!*\n\n"
                     f"Hi {user.first_name}, you've been subscribed to daily Bible readings!\n\n"
-                    f"📅 *Current Progress:*\n"
-                    f"Today is Day {day_number} of 365\n"
-                    f"Date: {date_str}\n\n"
                     f"⏰ *Schedule:*\n"
                     f"You'll receive a message every day at 4:00 AM GMT with that day's reading.\n\n"
                     f"📖 *What to Expect:*\n"
@@ -252,6 +249,16 @@ This bot follows a complete Bible in a Year reading plan, combining Old Testamen
                     f"Use /unsubscribe anytime to stop receiving messages."
                 )
                 logger.info(f"User {user_id} subscribed")
+                
+                # Send today's reading immediately after subscription
+                try:
+                    reading = self.get_bible_reading(day_number)
+                    encouragement = self.get_encouragement(day_number)
+                    message = self.format_message(day_number, date_str, reading, encouragement)
+                    await update.message.reply_text(message, parse_mode='Markdown')
+                    logger.info(f"Sent today's reading to newly subscribed user {user_id}")
+                except Exception as e:
+                    logger.error(f"Error sending today's reading to user {user_id}: {e}")
             else:
                 await update.message.reply_text("❌ There was an error subscribing. Please try again.")
     

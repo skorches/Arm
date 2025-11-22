@@ -27,8 +27,12 @@ async def send_daily_messages():
         return
     
     bot = BibleVerseBot(bot_token)
-    await bot.send_daily_to_all_subscribed()
-    await bot.shutdown()
+    # Initialize the application before sending messages
+    await bot.application.initialize()
+    try:
+        await bot.send_daily_to_all_subscribed()
+    finally:
+        await bot.shutdown()
 
 if __name__ == "__main__":
     asyncio.run(send_daily_messages())
