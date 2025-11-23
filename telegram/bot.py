@@ -16,6 +16,15 @@ from dotenv import load_dotenv
 from reading_plan import get_reading_for_day, READING_PLANS
 from user_storage import add_user, is_subscribed, get_all_subscribed_users, remove_user
 from bible_books import expand_bible_reading, BIBLE_BOOK_ABBREVIATIONS
+from quiz_questions import (
+    get_random_question, get_total_questions, get_stats,
+    CATEGORIES, DIFFICULTIES
+)
+from bible_qa import find_answer, get_all_topics
+from quiz_storage import (
+    get_user_score, update_user_score, start_quiz_session,
+    get_quiz_session, update_quiz_session, end_quiz_session
+)
 
 # Load environment variables
 load_dotenv()
@@ -41,6 +50,12 @@ class BibleVerseBot:
         self.application.add_handler(CommandHandler("today", self.today_command))
         self.application.add_handler(CommandHandler("day", self.day_command))
         self.application.add_handler(CommandHandler("search", self.search_command))
+        self.application.add_handler(CommandHandler("quiz", self.quiz_command))
+        self.application.add_handler(CommandHandler("quiz_start", self.quiz_command))
+        self.application.add_handler(CommandHandler("score", self.score_command))
+        self.application.add_handler(CommandHandler("quiz_stop", self.quiz_stop_command))
+        self.application.add_handler(CommandHandler("ask", self.ask_command))
+        self.application.add_handler(CommandHandler("question", self.ask_command))
         
         # Message handler for queries (non-command messages)
         self.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_query))
@@ -195,6 +210,16 @@ Send /today to see today's reading!"""
   Example: /search Matthew
   Example: /search Psalms
 
+/quiz - Start a fun Bible quiz! 🎯
+  Answer multiple choice questions and test your knowledge
+  Options: /quiz easy, /quiz medium, /quiz hard
+  Categories: /quiz old_testament, /quiz new_testament, /quiz bible_facts
+/ask [question] - Ask a Bible question and get an answer with Bible verses
+  Example: /ask How can I be saved?
+  Example: /ask What does the Bible say about love?
+/score - View your quiz statistics and best score
+/quiz_stop - Stop your current quiz session
+
 *Queries:*
 You can also ask questions like:
 • "What's today's reading?"
@@ -337,13 +362,276 @@ This bot follows a complete Bible in a Year reading plan, combining Old Testamen
         await update.message.reply_text(result_text, parse_mode='Markdown')
         logger.info(f"User {update.effective_user.id} searched for '{search_term}', found {len(found_days)} results")
     
+    async def quiz_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /quiz command - start a Bible quiz"""
+        # Ensure user is subscribed
+        user_id = update.effective_user.id
+        self._ensure_subscribed(user_id)
+        
+        # Check if user already has an active quiz
+        active_quiz = get_quiz_session(user_id)
+        if active_quiz:
+            await update.message.reply_text(
+                "🎯 *You already have an active quiz!*\n\n"
+                f"Current score: {active_quiz['score']}/{active_quiz['total']}\n\n"
+                "Answer the current question or use /quiz_stop to start a new quiz."
+            )
+            return
+        
+        # Parse optional arguments for difficulty and category
+        difficulty = None
+        category = None
+        
+        if context.args:
+            args_lower = [arg.lower() for arg in context.args]
+            
+            # Check for difficulty
+            for diff in DIFFICULTIES:
+                if diff in args_lower:
+                    difficulty = diff
+                    break
+            
+            # Check for category
+            for cat_key, cat_name in CATEGORIES.items():
+                if cat_key in args_lower or cat_name.lower() in args_lower:
+                    category = cat_key
+                    break
+        
+        # Start a new quiz with optional filters
+        question = get_random_question(difficulty=difficulty, category=category)
+        
+        start_quiz_session(user_id, 0, question)
+        
+        # Format question with options
+        options_text = ""
+        for i, option in enumerate(question['options']):
+            options_text += f"{i+1}. {option}\n"
+        
+        # Build difficulty and category info
+        diff_info = f"Difficulty: {question.get('difficulty', 'unknown').title()}\n" if question.get('difficulty') else ""
+        cat_info = f"Category: {CATEGORIES.get(question.get('category', ''), 'General')}\n" if question.get('category') else ""
+        
+        quiz_message = f"""🎯 *Bible Quiz Started!*
+
+{diff_info}{cat_info}
+*Question:*
+{question['question']}
+
+*Options:*
+{options_text}
+
+Reply with the *number* (1-4) of your answer, or type the answer text.
+
+Use /quiz_stop to end the quiz."""
+        
+        await update.message.reply_text(quiz_message, parse_mode='Markdown')
+        logger.info(f"User {user_id} started a quiz (difficulty: {difficulty}, category: {category})")
+    
+    async def score_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /score command - show user's quiz statistics"""
+        # Ensure user is subscribed
+        user_id = update.effective_user.id
+        self._ensure_subscribed(user_id)
+        
+        score = get_user_score(user_id)
+        stats = get_stats()
+        
+        if score['total_answered'] == 0:
+            stats_info = f"""📚 *Quiz Database:*
+• Total Questions: {stats['total']}
+• Easy: {stats['by_difficulty']['easy']}
+• Medium: {stats['by_difficulty']['medium']}
+• Hard: {stats['by_difficulty']['hard']}
+
+*Categories:*
+• Old Testament: {stats['by_category']['old_testament']}
+• New Testament: {stats['by_category']['new_testament']}
+• Bible Facts: {stats['by_category']['bible_facts']}"""
+            
+            await update.message.reply_text(
+                "📊 *Your Quiz Score*\n\n"
+                "You haven't taken any quizzes yet!\n\n"
+                f"{stats_info}\n\n"
+                "Use /quiz to start your first Bible quiz! 🎯\n\n"
+                "*Try:*\n"
+                "• /quiz easy - Easy questions\n"
+                "• /quiz medium - Medium difficulty\n"
+                "• /quiz hard - Hard questions\n"
+                "• /quiz old_testament - OT questions\n"
+                "• /quiz new_testament - NT questions"
+            )
+            return
+        
+        accuracy = (score['total_correct'] / score['total_answered']) * 100 if score['total_answered'] > 0 else 0
+        
+        score_message = f"""📊 *Your Quiz Statistics*
+
+✅ *Total Correct:* {score['total_correct']}
+📝 *Total Answered:* {score['total_answered']}
+📈 *Accuracy:* {accuracy:.1f}%
+🏆 *Best Score:* {score['best_score']:.1f}%
+🎯 *Quizzes Completed:* {score['quizzes_completed']}
+
+*Quiz Options:*
+• /quiz - Random question
+• /quiz easy - Easy questions
+• /quiz medium - Medium difficulty
+• /quiz hard - Hard questions
+• /quiz old_testament - Old Testament
+• /quiz new_testament - New Testament
+• /quiz bible_facts - Bible Facts
+
+Keep learning! Use /quiz to take another quiz."""
+        
+        await update.message.reply_text(score_message, parse_mode='Markdown')
+    
+    async def quiz_stop_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /quiz_stop command - stop current quiz"""
+        user_id = update.effective_user.id
+        
+        session = end_quiz_session(user_id)
+        if session:
+            # Save the quiz results
+            if session['total'] > 0:
+                update_user_score(user_id, session['score'], session['total'])
+                accuracy = (session['score'] / session['total']) * 100
+                await update.message.reply_text(
+                    f"✅ *Quiz Ended*\n\n"
+                    f"Final Score: {session['score']}/{session['total']} ({accuracy:.1f}%)\n\n"
+                    f"Use /quiz to start a new quiz!"
+                )
+            else:
+                await update.message.reply_text(
+                    "✅ Quiz session ended.\n\n"
+                    "Use /quiz to start a new quiz!"
+                )
+        else:
+            await update.message.reply_text(
+                "You don't have an active quiz session.\n\n"
+                "Use /quiz to start a new quiz!"
+            )
+    
+    async def ask_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /ask command - answer Bible questions with references"""
+        # Ensure user is subscribed
+        user_id = update.effective_user.id
+        self._ensure_subscribed(user_id)
+        
+        # Get the question from command arguments
+        if not context.args:
+            topics = get_all_topics()
+            topics_list = "\n".join([f"• {topic}" for topic in topics[:15]])
+            
+            await update.message.reply_text(
+                f"❓ *Ask a Bible Question*\n\n"
+                f"Ask me any Bible-related question and I'll provide an answer with Bible references!\n\n"
+                f"*Examples:*\n"
+                f"• /ask How can I be saved?\n"
+                f"• /ask What does the Bible say about love?\n"
+                f"• /ask How should I pray?\n"
+                f"• /ask What is faith?\n\n"
+                f"*Topics I can help with:*\n"
+                f"{topics_list}\n"
+                f"... and more!\n\n"
+                f"Just type: /ask [your question]"
+            )
+            return
+        
+        # Combine all arguments into a question
+        user_question = " ".join(context.args)
+        
+        # Find matching answer
+        answer_data = find_answer(user_question)
+        
+        if answer_data:
+            # Format the answer with references
+            response = f"❓ *Question:* {answer_data['question']}\n\n"
+            response += f"💡 *Answer:*\n{answer_data['answer']}\n\n"
+            response += "📖 *Bible References:*\n"
+            
+            for ref in answer_data['references']:
+                response += f"• {ref}\n"
+            
+            response += "\n💡 *Tip:* Use /ask [question] to ask more questions!"
+            
+            await update.message.reply_text(response, parse_mode='Markdown')
+            logger.info(f"User {user_id} asked: {user_question}")
+        else:
+            # No good match found
+            await update.message.reply_text(
+                f"❓ *Question Not Found*\n\n"
+                f"I couldn't find a specific answer for: \"{user_question}\"\n\n"
+                f"*Try asking about:*\n"
+                f"• Salvation and forgiveness\n"
+                f"• God's love and grace\n"
+                f"• Prayer and faith\n"
+                f"• Hope and peace\n"
+                f"• Wisdom and purpose\n"
+                f"• Marriage and relationships\n"
+                f"• Money and finances\n"
+                f"• Suffering and trials\n\n"
+                f"*Examples:*\n"
+                f"• /ask How can I be saved?\n"
+                f"• /ask What does the Bible say about love?\n"
+                f"• /ask How should I pray?\n\n"
+                f"Or use /quiz to test your Bible knowledge!"
+            )
+    
     async def handle_query(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle text queries (non-command messages)"""
         # Ensure user is subscribed
         user_id = update.effective_user.id
         self._ensure_subscribed(user_id)
         
-        text = update.message.text.lower().strip()
+        text = update.message.text.strip()
+        text_lower = text.lower()
+        
+        # Check if user has an active quiz session
+        active_quiz = get_quiz_session(user_id)
+        if active_quiz:
+            # Handle quiz answer
+            question_data = active_quiz['question_data']
+            user_answer = text_lower.strip()
+            
+            # Check if answer is a number (1-4)
+            try:
+                answer_num = int(user_answer) - 1
+                if 0 <= answer_num < len(question_data['options']):
+                    is_correct = (answer_num == question_data['correct'])
+                else:
+                    await update.message.reply_text("Please answer with a number between 1 and 4.")
+                    return
+            except ValueError:
+                # Check if answer matches text
+                correct_answer_text = question_data['options'][question_data['correct']].lower()
+                is_correct = (user_answer == correct_answer_text or 
+                            user_answer in correct_answer_text or 
+                            correct_answer_text in user_answer)
+            
+            # Update score
+            new_score = active_quiz['score'] + (1 if is_correct else 0)
+            new_total = active_quiz['total'] + 1
+            update_quiz_session(user_id, new_score, new_total)
+            
+            # Send feedback
+            correct_option = question_data['options'][question_data['correct']]
+            if is_correct:
+                feedback = f"✅ *Correct!*\n\nThe answer is: *{correct_option}*\n📖 {question_data['reference']}\n\n"
+            else:
+                feedback = f"❌ *Incorrect*\n\nThe correct answer is: *{correct_option}*\n📖 {question_data['reference']}\n\n"
+            
+            feedback += f"*Your Score:* {new_score}/{new_total}\n\n"
+            feedback += "Use /quiz to get another question, or /quiz_stop to end the quiz."
+            
+            await update.message.reply_text(feedback, parse_mode='Markdown')
+            
+            # End the quiz session after answering and save score
+            end_quiz_session(user_id)
+            update_user_score(user_id, new_score, new_total)
+            update_user_score(user_id, new_score, new_total)
+            
+            logger.info(f"User {user_id} answered quiz question: {'correct' if is_correct else 'incorrect'}")
+            return
         
         # Check for day number queries
         day_match = re.search(r'\bday\s+(\d+)\b', text)
@@ -378,6 +666,9 @@ This bot follows a complete Bible in a Year reading plan, combining Old Testamen
             "• /today - Get today's reading\n"
             "• /day 45 - Get reading for day 45\n"
             "• /search [book] - Find a Bible book\n"
+            "• /quiz - Start a fun Bible quiz! 🎯\n"
+            "  Try: /quiz easy, /quiz medium, /quiz hard\n"
+            "• /ask [question] - Ask a Bible question\n"
             "• /help - See all commands"
         )
     

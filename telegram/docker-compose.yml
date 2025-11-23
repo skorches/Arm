@@ -8,6 +8,9 @@ services:
     volumes:
       # Persist user subscriptions
       - ./subscribed_users.json:/app/subscribed_users.json
+      # Persist quiz scores and sessions
+      - ./quiz_scores.json:/app/quiz_scores.json
+      - ./active_quizzes.json:/app/active_quizzes.json
     environment:
       - TZ=GMT
       # Bot token can be set here or in .env file
