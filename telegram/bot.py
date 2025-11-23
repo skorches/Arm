@@ -42,6 +42,8 @@ class BibleVerseBot:
         self.token = token
         self.application = Application.builder().token(token).build()
         self._setup_handlers()
+        # In-memory fallback for quiz sessions if file storage fails
+        self._in_memory_quizzes = {}
         
     def _setup_handlers(self):
         """Set up all command and message handlers"""
@@ -57,6 +59,7 @@ class BibleVerseBot:
         self.application.add_handler(CommandHandler("quiz_stop", self.quiz_stop_command))
         self.application.add_handler(CommandHandler("ask", self.ask_command))
         self.application.add_handler(CommandHandler("question", self.ask_command))
+        self.application.add_handler(CommandHandler("test_daily", self.test_daily_command))
         
         # Message handler for queries (non-command messages)
         self.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_query))
@@ -401,7 +404,21 @@ This bot follows a complete Bible in a Year reading plan, combining Old Testamen
         # Start a new quiz with optional filters
         question = get_random_question(difficulty=difficulty, category=category)
         
-        start_quiz_session(user_id, 0, question)
+        # Try to save to file, but also save in-memory as fallback
+        try:
+            start_quiz_session(user_id, 0, question)
+        except Exception as e:
+            logger.error(f"Error starting quiz session in file for user {user_id}: {e}")
+        
+        # Always save in-memory as fallback
+        user_id_str = str(user_id)
+        self._in_memory_quizzes[user_id_str] = {
+            'question_index': 0,
+            'question_data': question,
+            'score': 0,
+            'total': 0,
+            'started_at': None
+        }
         
         # Format question with options
         options_text = ""
@@ -544,17 +561,26 @@ Keep learning! Use /quiz to take another quiz."""
         answer_data = find_answer(user_question)
         
         if answer_data:
-            # Format the answer with references
-            response = f"❓ *Question:* {answer_data['question']}\n\n"
-            response += f"💡 *Answer:*\n{answer_data['answer']}\n\n"
-            response += "📖 *Bible References:*\n"
+            # Format the answer with references (use HTML to avoid Markdown issues)
+            response = f"❓ <b>Question:</b> {answer_data['question']}\n\n"
+            response += f"💡 <b>Answer:</b>\n{answer_data['answer']}\n\n"
+            response += "📖 <b>Bible References:</b>\n"
             
             for ref in answer_data['references']:
-                response += f"• {ref}\n"
+                # Escape HTML special characters in references
+                ref_escaped = ref.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+                response += f"• {ref_escaped}\n"
             
-            response += "\n💡 *Tip:* Use /ask [question] to ask more questions!"
+            response += "\n💡 <b>Tip:</b> Use /ask [question] to ask more questions!"
             
-            await update.message.reply_text(response, parse_mode='Markdown')
+            try:
+                await update.message.reply_text(response, parse_mode='HTML')
+            except Exception as e:
+                logger.error(f"Error sending ask response: {e}")
+                # Fallback to plain text
+                response_plain = response.replace('<b>', '').replace('</b>', '').replace('&amp;', '&').replace('&lt;', '<').replace('&gt;', '>')
+                await update.message.reply_text(response_plain)
+            
             logger.info(f"User {user_id} asked: {user_question}")
         else:
             # No good match found
@@ -586,9 +612,19 @@ Keep learning! Use /quiz to take another quiz."""
         text = update.message.text.strip()
         text_lower = text.lower()
         
-        # Check if user has an active quiz session
-        active_quiz = get_quiz_session(user_id)
-        if active_quiz:
+        # Check if user has an active quiz session (try file storage first, then in-memory fallback)
+        active_quiz = None
+        try:
+            active_quiz = get_quiz_session(user_id)
+        except Exception as e:
+            logger.error(f"Error getting quiz session from file for user {user_id}: {e}")
+        
+        # Fallback to in-memory storage if file storage failed
+        if not active_quiz and str(user_id) in self._in_memory_quizzes:
+            active_quiz = self._in_memory_quizzes[str(user_id)]
+            logger.info(f"Using in-memory quiz session for user {user_id}")
+        
+        if active_quiz and 'question_data' in active_quiz:
             # Handle quiz answer
             question_data = active_quiz['question_data']
             user_answer = text_lower.strip()
@@ -611,7 +647,17 @@ Keep learning! Use /quiz to take another quiz."""
             # Update score
             new_score = active_quiz['score'] + (1 if is_correct else 0)
             new_total = active_quiz['total'] + 1
-            update_quiz_session(user_id, new_score, new_total)
+            
+            # Update session in both file and memory
+            try:
+                update_quiz_session(user_id, new_score, new_total)
+            except Exception as e:
+                logger.error(f"Error updating quiz session in file for user {user_id}: {e}")
+            
+            # Also update in-memory fallback
+            if str(user_id) in self._in_memory_quizzes:
+                self._in_memory_quizzes[str(user_id)]['score'] = new_score
+                self._in_memory_quizzes[str(user_id)]['total'] = new_total
             
             # Send feedback
             correct_option = question_data['options'][question_data['correct']]
@@ -636,13 +682,46 @@ Keep learning! Use /quiz to take another quiz."""
             new_question = get_random_question()
             
             # Update the quiz session with new question while preserving score
-            quizzes = load_active_quizzes()
             user_id_str = str(user_id)
-            if user_id_str in quizzes:
-                quizzes[user_id_str]['question_data'] = new_question
-                quizzes[user_id_str]['question_index'] = 0
-                # Keep the existing score and total
-                save_active_quizzes(quizzes)
+            try:
+                quizzes = load_active_quizzes()
+                if user_id_str in quizzes:
+                    quizzes[user_id_str]['question_data'] = new_question
+                    quizzes[user_id_str]['question_index'] = 0
+                    # Keep the existing score and total
+                    if not save_active_quizzes(quizzes):
+                        logger.warning(f"Failed to save active quiz to file for user {user_id}, using in-memory")
+                        # Update in-memory instead
+                        if user_id_str not in self._in_memory_quizzes:
+                            self._in_memory_quizzes[user_id_str] = {}
+                        self._in_memory_quizzes[user_id_str].update({
+                            'question_data': new_question,
+                            'question_index': 0,
+                            'score': new_score,
+                            'total': new_total
+                        })
+                else:
+                    # Session was lost, create a new one
+                    logger.warning(f"Quiz session lost in file for user {user_id}, using in-memory")
+                    if user_id_str not in self._in_memory_quizzes:
+                        self._in_memory_quizzes[user_id_str] = {}
+                    self._in_memory_quizzes[user_id_str].update({
+                        'question_data': new_question,
+                        'question_index': 0,
+                        'score': new_score,
+                        'total': new_total
+                    })
+            except Exception as e:
+                logger.error(f"Error updating quiz session with new question for user {user_id}: {e}")
+                # Use in-memory fallback
+                if user_id_str not in self._in_memory_quizzes:
+                    self._in_memory_quizzes[user_id_str] = {}
+                self._in_memory_quizzes[user_id_str].update({
+                    'question_data': new_question,
+                    'question_index': 0,
+                    'score': new_score,
+                    'total': new_total
+                })
             
             # Format new question with options
             new_options_text = ""
@@ -742,17 +821,48 @@ Use /quiz_stop to end the quiz."""
         
         if not users:
             logger.info("No subscribed users to send messages to")
-            return
+            return 0, 0
         
         logger.info(f"Sending daily reading to {len(users)} subscribed users")
         
         success_count = 0
+        failed_users = []
         for user_id in users:
             if await self.send_daily_to_user(user_id):
                 success_count += 1
+            else:
+                failed_users.append(user_id)
             await asyncio.sleep(0.1)  # Small delay to avoid rate limiting
         
         logger.info(f"Successfully sent to {success_count}/{len(users)} users")
+        if failed_users:
+            logger.warning(f"Failed to send to users: {failed_users}")
+        
+        return success_count, len(users)
+    
+    async def test_daily_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /test_daily command - manually test daily message sending"""
+        # Ensure user is subscribed
+        user_id = update.effective_user.id
+        self._ensure_subscribed(user_id)
+        
+        await update.message.reply_text(
+            "🔄 Testing daily message sending...\n\n"
+            "This will send today's reading to all subscribed users."
+        )
+        
+        try:
+            success_count, total_users = await self.send_daily_to_all_subscribed()
+            await update.message.reply_text(
+                f"✅ Test completed!\n\n"
+                f"Successfully sent to {success_count}/{total_users} users."
+            )
+            logger.info(f"User {user_id} manually tested daily message sending")
+        except Exception as e:
+            logger.error(f"Error in test_daily_command: {e}", exc_info=True)
+            await update.message.reply_text(
+                f"❌ Error testing daily messages:\n{str(e)}"
+            )
     
     def run(self):
         """Start the bot"""
