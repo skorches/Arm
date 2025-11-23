@@ -16,22 +16,22 @@ STORAGE_FILE = os.path.join(SCRIPT_DIR, "subscribed_users.json")
 def _fix_storage_file():
     """Fix storage file if it's a directory (Docker volume mount issue)"""
     if os.path.exists(STORAGE_FILE) and os.path.isdir(STORAGE_FILE):
-        logger.warning(f"Storage file path is a directory! Removing: {STORAGE_FILE}")
-        try:
-            os.rmdir(STORAGE_FILE)
-            logger.info(f"Successfully removed directory: {STORAGE_FILE}")
-        except OSError as e:
-            logger.error(f"Failed to remove directory {STORAGE_FILE}: {e}")
-            # If directory is not empty, try to remove it recursively (shouldn't happen, but just in case)
-            try:
-                shutil.rmtree(STORAGE_FILE)
-                logger.info(f"Successfully removed directory tree: {STORAGE_FILE}")
-            except Exception as e2:
-                logger.error(f"Failed to remove directory tree {STORAGE_FILE}: {e2}")
-                raise
+        logger.error(f"Storage file path is a directory! Cannot remove mounted directory: {STORAGE_FILE}")
+        logger.error("Please stop the container, remove the directory on the host, and create a file instead:")
+        logger.error(f"  rm -rf {STORAGE_FILE}")
+        logger.error(f"  echo '{{\"users\": []}}' > {STORAGE_FILE}")
+        logger.error("Then restart the container.")
+        # Don't crash - just log the error and continue
+        # The user will need to fix this manually on the host
+        return False
+    return True
 
-# Fix storage file on module load
-_fix_storage_file()
+# Try to fix storage file on module load (non-fatal if it fails)
+try:
+    _fix_storage_file()
+except Exception as e:
+    logger.error(f"Error checking storage file: {e}")
+    # Continue anyway - the file operations will handle errors
 
 # Log the storage file path on module load for debugging
 logger.info(f"User storage file path: {STORAGE_FILE}")
