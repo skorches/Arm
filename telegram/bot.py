@@ -11,10 +11,10 @@ import re
 from datetime import datetime, timedelta
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
-from telegram.error import TelegramError
+from telegram.error import TelegramError, Forbidden
 from dotenv import load_dotenv
 from reading_plan import get_reading_for_day, READING_PLANS
-from user_storage import add_user, is_subscribed, get_all_subscribed_users
+from user_storage import add_user, is_subscribed, get_all_subscribed_users, remove_user
 from bible_books import expand_bible_reading, BIBLE_BOOK_ABBREVIATIONS
 
 # Load environment variables
@@ -154,8 +154,14 @@ You'll receive a message every day at 4:00 AM GMT with that day's reading.
 *Try it now:*
 Send /today to see today's reading!"""
         
-        await update.message.reply_text(welcome_message, parse_mode='Markdown')
-        logger.info(f"User {user.id} ({user.username}) started the bot")
+        try:
+            await update.message.reply_text(welcome_message, parse_mode='Markdown')
+            logger.info(f"User {user.id} ({user.username}) started the bot")
+        except Forbidden:
+            # User blocked the bot - remove from subscriptions
+            logger.warning(f"User {user_id} blocked the bot, removing from subscriptions")
+            remove_user(user_id)
+            return
         
         # Send today's reading if this is a new user
         if is_new:
@@ -165,6 +171,10 @@ Send /today to see today's reading!"""
                 message = self.format_message(day_number, date_str, reading, encouragement)
                 await update.message.reply_text(message, parse_mode='Markdown')
                 logger.info(f"Sent today's reading to new user {user_id}")
+            except Forbidden:
+                # User blocked the bot - remove from subscriptions
+                logger.warning(f"User {user_id} blocked the bot, removing from subscriptions")
+                remove_user(user_id)
             except Exception as e:
                 logger.error(f"Error sending today's reading to new user {user_id}: {e}")
     
@@ -389,6 +399,11 @@ This bot follows a complete Bible in a Year reading plan, combining Old Testamen
             logger.info(f"Successfully sent daily reading to user {user_id}")
             return True
             
+        except Forbidden:
+            # User blocked the bot - remove from subscriptions
+            logger.warning(f"User {user_id} blocked the bot, removing from subscriptions")
+            remove_user(user_id)
+            return False
         except TelegramError as e:
             logger.error(f"Telegram error sending to user {user_id}: {e}")
             return False
