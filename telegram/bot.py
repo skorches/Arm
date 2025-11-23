@@ -24,7 +24,8 @@ from bible_qa import find_answer, get_all_topics
 from quiz_storage import (
     get_user_score, update_user_score, start_quiz_session,
     get_quiz_session, update_quiz_session, end_quiz_session,
-    load_active_quizzes, save_active_quizzes
+    load_active_quizzes, save_active_quizzes, get_leaderboard,
+    get_user_rank, update_user_info
 )
 
 # Load environment variables
@@ -55,7 +56,12 @@ class BibleVerseBot:
         self.application.add_handler(CommandHandler("search", self.search_command))
         self.application.add_handler(CommandHandler("quiz", self.quiz_command))
         self.application.add_handler(CommandHandler("quiz_start", self.quiz_command))
+        self.application.add_handler(CommandHandler("quiz_easy", self.quiz_easy_command))
+        self.application.add_handler(CommandHandler("quiz_medium", self.quiz_medium_command))
+        self.application.add_handler(CommandHandler("quiz_hard", self.quiz_hard_command))
         self.application.add_handler(CommandHandler("score", self.score_command))
+        self.application.add_handler(CommandHandler("leaderboard", self.leaderboard_command))
+        self.application.add_handler(CommandHandler("rankings", self.leaderboard_command))
         self.application.add_handler(CommandHandler("quiz_stop", self.quiz_stop_command))
         self.application.add_handler(CommandHandler("ask", self.ask_command))
         self.application.add_handler(CommandHandler("question", self.ask_command))
@@ -444,6 +450,168 @@ Use /quiz_stop to end the quiz."""
         await update.message.reply_text(quiz_message, parse_mode='HTML')
         logger.info(f"User {user_id} started a quiz (difficulty: {difficulty}, category: {category})")
     
+    async def quiz_easy_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /quiz_easy command - start an easy quiz"""
+        # Ensure user is subscribed
+        user_id = update.effective_user.id
+        self._ensure_subscribed(user_id)
+        
+        # Check if user already has an active quiz
+        active_quiz = get_quiz_session(user_id)
+        if active_quiz:
+            await update.message.reply_text(
+                "🎯 *You already have an active quiz!*\n\n"
+                f"Current score: {active_quiz['score']}/{active_quiz['total']}\n\n"
+                "Answer the current question or use /quiz_stop to start a new quiz."
+            )
+            return
+        
+        # Start a new quiz with easy difficulty
+        question = get_random_question(difficulty="easy")
+        
+        # Try to save to file, but also save in-memory as fallback
+        try:
+            start_quiz_session(user_id, 0, question)
+        except Exception as e:
+            logger.error(f"Error starting quiz session in file for user {user_id}: {e}")
+        
+        # Always save in-memory as fallback
+        user_id_str = str(user_id)
+        self._in_memory_quizzes[user_id_str] = {
+            'question_index': 0,
+            'question_data': question,
+            'score': 0,
+            'total': 0,
+            'started_at': None
+        }
+        
+        # Format question with options
+        options_text = ""
+        for i, option in enumerate(question['options']):
+            options_text += f"{i+1}. {option}\n"
+        
+        quiz_message = f"""🎯 <b>Easy Bible Quiz Started!</b>
+
+<b>Question:</b>
+{question['question']}
+
+<b>Options:</b>
+{options_text}
+Reply with the <b>number</b> (1-4) of your answer, or type the answer text.
+
+Use /quiz_stop to end the quiz."""
+        
+        await update.message.reply_text(quiz_message, parse_mode='HTML')
+        logger.info(f"User {user_id} started an easy quiz")
+    
+    async def quiz_medium_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /quiz_medium command - start a medium quiz"""
+        # Ensure user is subscribed
+        user_id = update.effective_user.id
+        self._ensure_subscribed(user_id)
+        
+        # Check if user already has an active quiz
+        active_quiz = get_quiz_session(user_id)
+        if active_quiz:
+            await update.message.reply_text(
+                "🎯 *You already have an active quiz!*\n\n"
+                f"Current score: {active_quiz['score']}/{active_quiz['total']}\n\n"
+                "Answer the current question or use /quiz_stop to start a new quiz."
+            )
+            return
+        
+        # Start a new quiz with medium difficulty
+        question = get_random_question(difficulty="medium")
+        
+        # Try to save to file, but also save in-memory as fallback
+        try:
+            start_quiz_session(user_id, 0, question)
+        except Exception as e:
+            logger.error(f"Error starting quiz session in file for user {user_id}: {e}")
+        
+        # Always save in-memory as fallback
+        user_id_str = str(user_id)
+        self._in_memory_quizzes[user_id_str] = {
+            'question_index': 0,
+            'question_data': question,
+            'score': 0,
+            'total': 0,
+            'started_at': None
+        }
+        
+        # Format question with options
+        options_text = ""
+        for i, option in enumerate(question['options']):
+            options_text += f"{i+1}. {option}\n"
+        
+        quiz_message = f"""🎯 <b>Medium Bible Quiz Started!</b>
+
+<b>Question:</b>
+{question['question']}
+
+<b>Options:</b>
+{options_text}
+Reply with the <b>number</b> (1-4) of your answer, or type the answer text.
+
+Use /quiz_stop to end the quiz."""
+        
+        await update.message.reply_text(quiz_message, parse_mode='HTML')
+        logger.info(f"User {user_id} started a medium quiz")
+    
+    async def quiz_hard_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /quiz_hard command - start a hard quiz"""
+        # Ensure user is subscribed
+        user_id = update.effective_user.id
+        self._ensure_subscribed(user_id)
+        
+        # Check if user already has an active quiz
+        active_quiz = get_quiz_session(user_id)
+        if active_quiz:
+            await update.message.reply_text(
+                "🎯 *You already have an active quiz!*\n\n"
+                f"Current score: {active_quiz['score']}/{active_quiz['total']}\n\n"
+                "Answer the current question or use /quiz_stop to start a new quiz."
+            )
+            return
+        
+        # Start a new quiz with hard difficulty
+        question = get_random_question(difficulty="hard")
+        
+        # Try to save to file, but also save in-memory as fallback
+        try:
+            start_quiz_session(user_id, 0, question)
+        except Exception as e:
+            logger.error(f"Error starting quiz session in file for user {user_id}: {e}")
+        
+        # Always save in-memory as fallback
+        user_id_str = str(user_id)
+        self._in_memory_quizzes[user_id_str] = {
+            'question_index': 0,
+            'question_data': question,
+            'score': 0,
+            'total': 0,
+            'started_at': None
+        }
+        
+        # Format question with options
+        options_text = ""
+        for i, option in enumerate(question['options']):
+            options_text += f"{i+1}. {option}\n"
+        
+        quiz_message = f"""🎯 <b>Hard Bible Quiz Started!</b>
+
+<b>Question:</b>
+{question['question']}
+
+<b>Options:</b>
+{options_text}
+Reply with the <b>number</b> (1-4) of your answer, or type the answer text.
+
+Use /quiz_stop to end the quiz."""
+        
+        await update.message.reply_text(quiz_message, parse_mode='HTML')
+        logger.info(f"User {user_id} started a hard quiz")
+    
     async def score_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle /score command - show user's quiz statistics"""
         # Ensure user is subscribed
@@ -481,9 +649,14 @@ Use /quiz_stop to end the quiz."""
         
         accuracy = (score['total_correct'] / score['total_answered']) * 100 if score['total_answered'] > 0 else 0
         
+        # Build rank info
+        rank_info = ""
+        if rank:
+            rank_info = f"🏅 *Rank:* #{rank}\n"
+        
         score_message = f"""📊 *Your Quiz Statistics*
 
-✅ *Total Correct:* {score['total_correct']}
+{rank_info}✅ *Total Correct:* {score['total_correct']}
 📝 *Total Answered:* {score['total_answered']}
 📈 *Accuracy:* {accuracy:.1f}%
 🏆 *Best Score:* {score['best_score']:.1f}%
@@ -491,16 +664,78 @@ Use /quiz_stop to end the quiz."""
 
 *Quiz Options:*
 • /quiz - Random question
-• /quiz easy - Easy questions
-• /quiz medium - Medium difficulty
-• /quiz hard - Hard questions
+• /quiz_easy - Easy questions only
+• /quiz_medium - Medium difficulty only
+• /quiz_hard - Hard questions only
 • /quiz old_testament - Old Testament
 • /quiz new_testament - New Testament
 • /quiz bible_facts - Bible Facts
 
+*Leaderboard:*
+• /leaderboard - See top players
+
 Keep learning! Use /quiz to take another quiz."""
         
         await update.message.reply_text(score_message, parse_mode='Markdown')
+    
+    async def leaderboard_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /leaderboard command - show top players"""
+        # Ensure user is subscribed
+        user_id = update.effective_user.id
+        self._ensure_subscribed(user_id)
+        
+        # Update user info
+        user = update.effective_user
+        update_user_info(user_id, username=user.username, first_name=user.first_name)
+        
+        leaderboard = get_leaderboard(limit=10)
+        user_rank, user_data = get_user_rank(user_id)
+        
+        if not leaderboard:
+            await update.message.reply_text(
+                "🏆 *Leaderboard*\n\n"
+                "No players yet! Be the first to take a quiz with /quiz"
+            )
+            return
+        
+        # Build leaderboard message
+        leaderboard_text = "🏆 *Top Players Leaderboard*\n\n"
+        
+        medals = ["🥇", "🥈", "🥉"]
+        for idx, player in enumerate(leaderboard, start=1):
+            medal = medals[idx - 1] if idx <= 3 else f"{idx}."
+            
+            # Get display name
+            display_name = player.get('username')
+            if not display_name:
+                display_name = player.get('first_name', f"User {player['user_id']}")
+            if display_name:
+                display_name = f"@{display_name}" if player.get('username') else display_name
+            
+            leaderboard_text += f"{medal} {display_name}\n"
+            leaderboard_text += f"   Best: {player['best_score']:.1f}% | "
+            leaderboard_text += f"Correct: {player['total_correct']}/{player['total_answered']} | "
+            leaderboard_text += f"Quizzes: {player['quizzes_completed']}\n\n"
+        
+        # Add user's rank if they're not in top 10
+        if user_rank and user_rank > 10:
+            user_accuracy = (user_data['total_correct'] / user_data['total_answered']) * 100 if user_data['total_answered'] > 0 else 0
+            user_display = user.username if user.username else user.first_name
+            if user.username:
+                user_display = f"@{user_display}"
+            
+            leaderboard_text += f"━━━━━━━━━━━━━━━━━━━━\n"
+            leaderboard_text += f"Your Rank: #{user_rank}\n"
+            leaderboard_text += f"Best: {user_data['best_score']:.1f}% | "
+            leaderboard_text += f"Correct: {user_data['total_correct']}/{user_data['total_answered']}\n"
+        
+        leaderboard_text += "\n*Commands:*\n"
+        leaderboard_text += "• /quiz_easy - Easy questions\n"
+        leaderboard_text += "• /quiz_medium - Medium questions\n"
+        leaderboard_text += "• /quiz_hard - Hard questions\n"
+        leaderboard_text += "• /score - Your stats"
+        
+        await update.message.reply_text(leaderboard_text, parse_mode='Markdown')
     
     async def quiz_stop_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle /quiz_stop command - stop current quiz"""
@@ -510,7 +745,14 @@ Keep learning! Use /quiz to take another quiz."""
         if session:
             # Save the quiz results
             if session['total'] > 0:
-                update_user_score(user_id, session['score'], session['total'])
+                user = update.effective_user
+                update_user_score(
+                    user_id, 
+                    session['score'], 
+                    session['total'],
+                    username=user.username,
+                    first_name=user.first_name
+                )
                 accuracy = (session['score'] / session['total']) * 100
                 await update.message.reply_text(
                     f"✅ *Quiz Ended*\n\n"
@@ -670,8 +912,15 @@ Keep learning! Use /quiz to take another quiz."""
             
             await update.message.reply_text(feedback, parse_mode='HTML')
             
-            # Save score so far
-            update_user_score(user_id, new_score, new_total)
+            # Save score so far (update user info for leaderboard)
+            user = update.effective_user
+            update_user_score(
+                user_id, 
+                new_score, 
+                new_total,
+                username=user.username,
+                first_name=user.first_name
+            )
             
             logger.info(f"User {user_id} answered quiz question: {'correct' if is_correct else 'incorrect'}")
             

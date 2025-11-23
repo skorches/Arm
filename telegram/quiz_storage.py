@@ -63,11 +63,35 @@ def get_user_score(user_id):
         'total_answered': 0,
         'total_correct': 0,
         'quizzes_completed': 0,
-        'best_score': 0
+        'best_score': 0,
+        'username': None,
+        'first_name': None
     })
     return user_scores
 
-def update_user_score(user_id, correct, total):
+def update_user_info(user_id, username=None, first_name=None):
+    """Update user's name information for leaderboard"""
+    scores = load_quiz_scores()
+    user_id_str = str(user_id)
+    
+    if user_id_str not in scores:
+        scores[user_id_str] = {
+            'total_answered': 0,
+            'total_correct': 0,
+            'quizzes_completed': 0,
+            'best_score': 0,
+            'username': None,
+            'first_name': None
+        }
+    
+    if username:
+        scores[user_id_str]['username'] = username
+    if first_name:
+        scores[user_id_str]['first_name'] = first_name
+    
+    return save_quiz_scores(scores)
+
+def update_user_score(user_id, correct, total, username=None, first_name=None):
     """Update user's quiz score"""
     scores = load_quiz_scores()
     user_id_str = str(user_id)
@@ -77,8 +101,16 @@ def update_user_score(user_id, correct, total):
             'total_answered': 0,
             'total_correct': 0,
             'quizzes_completed': 0,
-            'best_score': 0
+            'best_score': 0,
+            'username': None,
+            'first_name': None
         }
+    
+    # Update user info if provided
+    if username:
+        scores[user_id_str]['username'] = username
+    if first_name:
+        scores[user_id_str]['first_name'] = first_name
     
     scores[user_id_str]['total_answered'] += total
     scores[user_id_str]['total_correct'] += correct
@@ -92,6 +124,40 @@ def update_user_score(user_id, correct, total):
         scores[user_id_str]['best_score'] = accuracy
     
     return save_quiz_scores(scores)
+
+def get_leaderboard(limit=10):
+    """Get top players sorted by best score, then by total correct"""
+    scores = load_quiz_scores()
+    
+    # Filter out users with no scores
+    valid_users = []
+    for user_id, user_data in scores.items():
+        if user_data.get('total_answered', 0) > 0:
+            valid_users.append({
+                'user_id': user_id,
+                'best_score': user_data.get('best_score', 0),
+                'total_correct': user_data.get('total_correct', 0),
+                'total_answered': user_data.get('total_answered', 0),
+                'quizzes_completed': user_data.get('quizzes_completed', 0),
+                'username': user_data.get('username'),
+                'first_name': user_data.get('first_name')
+            })
+    
+    # Sort by best_score (descending), then by total_correct (descending)
+    valid_users.sort(key=lambda x: (x['best_score'], x['total_correct']), reverse=True)
+    
+    return valid_users[:limit]
+
+def get_user_rank(user_id):
+    """Get user's rank in the leaderboard"""
+    leaderboard = get_leaderboard(limit=1000)  # Get all users
+    user_id_str = str(user_id)
+    
+    for rank, user in enumerate(leaderboard, start=1):
+        if user['user_id'] == user_id_str:
+            return rank, user
+    
+    return None, None
 
 def load_active_quizzes():
     """Load active quiz sessions"""
