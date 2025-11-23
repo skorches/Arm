@@ -14,7 +14,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 from telegram.error import TelegramError
 from dotenv import load_dotenv
 from reading_plan import get_reading_for_day, READING_PLANS
-from user_storage import add_user, remove_user, is_subscribed, get_all_subscribed_users
+from user_storage import add_user, is_subscribed, get_all_subscribed_users
 from bible_books import expand_bible_reading, BIBLE_BOOK_ABBREVIATIONS
 
 # Load environment variables
@@ -40,13 +40,21 @@ class BibleVerseBot:
         self.application.add_handler(CommandHandler("help", self.help_command))
         self.application.add_handler(CommandHandler("today", self.today_command))
         self.application.add_handler(CommandHandler("day", self.day_command))
-        self.application.add_handler(CommandHandler("subscribe", self.subscribe_command))
-        self.application.add_handler(CommandHandler("unsubscribe", self.unsubscribe_command))
-        self.application.add_handler(CommandHandler("status", self.status_command))
         self.application.add_handler(CommandHandler("search", self.search_command))
         
         # Message handler for queries (non-command messages)
         self.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_query))
+    
+    def _ensure_subscribed(self, user_id):
+        """Ensure user is subscribed (auto-subscribe on first interaction)"""
+        if not is_subscribed(user_id):
+            if add_user(user_id):
+                logger.info(f"Auto-subscribed user {user_id} on first interaction")
+                return True
+            else:
+                logger.error(f"Failed to auto-subscribe user {user_id}")
+                return False
+        return True
     
     def get_day_of_year(self):
         """Get the current day of the year (1-365/366)"""
@@ -121,6 +129,14 @@ class BibleVerseBot:
     async def start_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle /start command"""
         user = update.effective_user
+        user_id = user.id
+        
+        # Auto-subscribe user on first interaction
+        is_new = not is_subscribed(user_id)
+        self._ensure_subscribed(user_id)
+        
+        day_number, date_str = self.get_day_of_year()
+        
         welcome_message = f"""Welcome to the Bible in a Year Bot, {user.first_name}! 🙏
 
 I'll help you read through the Bible in 365 days.
@@ -130,19 +146,33 @@ I'll help you read through the Bible in 365 days.
 /today - Get today's reading
 /day [number] - Get reading for a specific day (1-365)
 /search [book] - Search for a Bible book in the reading plan
-/subscribe - Subscribe to daily messages at 4:00 AM GMT
-/unsubscribe - Unsubscribe from daily messages
-/status - Check your subscription status and progress
 /help - Show all commands
+
+⏰ *Daily Messages:*
+You'll receive a message every day at 4:00 AM GMT with that day's reading.
 
 *Try it now:*
 Send /today to see today's reading!"""
         
         await update.message.reply_text(welcome_message, parse_mode='Markdown')
         logger.info(f"User {user.id} ({user.username}) started the bot")
+        
+        # Send today's reading if this is a new user
+        if is_new:
+            try:
+                reading = self.get_bible_reading(day_number)
+                encouragement = self.get_encouragement(day_number)
+                message = self.format_message(day_number, date_str, reading, encouragement)
+                await update.message.reply_text(message, parse_mode='Markdown')
+                logger.info(f"Sent today's reading to new user {user_id}")
+            except Exception as e:
+                logger.error(f"Error sending today's reading to new user {user_id}: {e}")
     
     async def help_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle /help command"""
+        # Ensure user is subscribed
+        self._ensure_subscribed(update.effective_user.id)
+        
         help_text = """📖 *Bible in a Year Bot - Help*
 
 *Commands:*
@@ -155,15 +185,14 @@ Send /today to see today's reading!"""
   Example: /search Matthew
   Example: /search Psalms
 
-/subscribe - Subscribe to daily messages (sent at 4:00 AM GMT)
-/unsubscribe - Stop receiving daily messages
-/status - Check your subscription status and progress
-
 *Queries:*
 You can also ask questions like:
 • "What's today's reading?"
 • "Day 45"
 • "Show me day 100"
+
+*Daily Messages:*
+You'll automatically receive a message every day at 4:00 AM GMT with that day's reading.
 
 *About:*
 This bot follows a complete Bible in a Year reading plan, combining Old Testament and New Testament readings each day."""
@@ -172,6 +201,8 @@ This bot follows a complete Bible in a Year reading plan, combining Old Testamen
     
     async def today_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle /today command"""
+        # Ensure user is subscribed
+        self._ensure_subscribed(update.effective_user.id)
         day_number, date_str = self.get_day_of_year()
         reading = self.get_bible_reading(day_number)
         encouragement = self.get_encouragement(day_number)
@@ -187,6 +218,8 @@ This bot follows a complete Bible in a Year reading plan, combining Old Testamen
     
     async def day_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle /day command with optional day number"""
+        # Ensure user is subscribed
+        self._ensure_subscribed(update.effective_user.id)
         if context.args:
             try:
                 day_number = int(context.args[0])
@@ -217,152 +250,9 @@ This bot follows a complete Bible in a Year reading plan, combining Old Testamen
             logger.error(f"Error sending message: {e}")
             await update.message.reply_text("Sorry, there was an error sending the message.")
     
-    async def subscribe_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Handle /subscribe command"""
-        user_id = update.effective_user.id
-        user = update.effective_user
-        
-        if is_subscribed(user_id):
-            day_number, date_str = self.get_day_of_year()
-            await update.message.reply_text(
-                f"✅ *You're already subscribed!*\n\n"
-                f"Hi {user.first_name}, you're receiving daily Bible readings.\n\n"
-                f"📅 *Current Progress:*\n"
-                f"Today is Day {day_number} of 365\n"
-                f"Date: {date_str}\n\n"
-                f"⏰ *Schedule:*\n"
-                f"You'll receive a message every day at 4:00 AM GMT with that day's reading.\n\n"
-                f"Use /unsubscribe to stop receiving daily messages."
-            )
-        else:
-            if add_user(user_id):
-                day_number, date_str = self.get_day_of_year()
-                await update.message.reply_text(
-                    f"✅ *Successfully Subscribed!*\n\n"
-                    f"Hi {user.first_name}, you've been subscribed to daily Bible readings!\n\n"
-                    f"⏰ *Schedule:*\n"
-                    f"You'll receive a message every day at 4:00 AM GMT with that day's reading.\n\n"
-                    f"📖 *What to Expect:*\n"
-                    f"• Daily Bible reading assignments\n"
-                    f"• Words of encouragement\n"
-                    f"• Progress tracking (Day X of 365)\n\n"
-                    f"Use /unsubscribe anytime to stop receiving messages."
-                )
-                logger.info(f"User {user_id} subscribed")
-                
-                # Send today's reading immediately after subscription
-                try:
-                    reading = self.get_bible_reading(day_number)
-                    encouragement = self.get_encouragement(day_number)
-                    message = self.format_message(day_number, date_str, reading, encouragement)
-                    await update.message.reply_text(message, parse_mode='Markdown')
-                    logger.info(f"Sent today's reading to newly subscribed user {user_id}")
-                except Exception as e:
-                    logger.error(f"Error sending today's reading to user {user_id}: {e}")
-            else:
-                await update.message.reply_text("❌ There was an error subscribing. Please try again.")
-    
-    async def unsubscribe_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Handle /unsubscribe command"""
-        user_id = update.effective_user.id
-        user = update.effective_user
-        
-        try:
-            if not is_subscribed(user_id):
-                await update.message.reply_text(
-                    f"ℹ️ *Not Subscribed*\n\n"
-                    f"Hi {user.first_name}, you're not currently subscribed to daily messages.\n\n"
-                    f"Use /subscribe to start receiving daily Bible readings!"
-                )
-            else:
-                if remove_user(user_id):
-                    day_number, date_str = self.get_day_of_year()
-                    await update.message.reply_text(
-                        f"✅ *Successfully Unsubscribed!*\n\n"
-                        f"Hi {user.first_name}, you've been unsubscribed from daily Bible readings.\n\n"
-                        f"📅 *Current Progress:*\n"
-                        f"Today is Day {day_number} of 365\n"
-                        f"Date: {date_str}\n\n"
-                        f"⏰ *Daily Messages:*\n"
-                        f"You will no longer receive automatic daily messages.\n\n"
-                        f"💡 *You can still:*\n"
-                        f"• Use /today to get today's reading\n"
-                        f"• Use /day [number] for any day\n"
-                        f"• Use /search [book] to find readings\n\n"
-                        f"Use /subscribe anytime to start receiving daily messages again!"
-                    )
-                    logger.info(f"User {user_id} unsubscribed")
-                else:
-                    await update.message.reply_text(
-                        "❌ *Error Unsubscribing*\n\n"
-                        "There was an error processing your unsubscribe request.\n"
-                        "Please try again or contact support."
-                    )
-                    logger.error(f"Failed to unsubscribe user {user_id}")
-        except Exception as e:
-            logger.error(f"Error in unsubscribe_command: {e}")
-            await update.message.reply_text(
-                "❌ *Error*\n\n"
-                "An unexpected error occurred. Please try again."
-            )
-    
-    async def status_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Handle /status command"""
-        user_id = update.effective_user.id
-        user = update.effective_user
-        day_number, date_str = self.get_day_of_year()
-        
-        # Calculate progress percentage
-        progress_percent = round((day_number / 365) * 100, 1)
-        days_remaining = 365 - day_number
-        
-        if is_subscribed(user_id):
-            status_message = f"""📊 *Your Status*
-
-👤 *User:* {user.first_name}
-✅ *Subscription:* Active
-
-📅 *Current Progress:*
-• Day {day_number} of 365
-• Date: {date_str}
-• Progress: {progress_percent}%
-• Days remaining: {days_remaining}
-
-⏰ *Daily Messages:*
-• Time: 4:00 AM GMT
-• Status: ✅ Receiving
-
-📖 *Quick Actions:*
-• /today - Get today's reading
-• /day [number] - Get specific day
-• /search [book] - Find a Bible book
-• /unsubscribe - Stop daily messages"""
-        else:
-            status_message = f"""📊 *Your Status*
-
-👤 *User:* {user.first_name}
-❌ *Subscription:* Not Active
-
-📅 *Current Progress:*
-• Day {day_number} of 365
-• Date: {date_str}
-• Progress: {progress_percent}%
-• Days remaining: {days_remaining}
-
-⏰ *Daily Messages:*
-• Status: ❌ Not receiving
-
-💡 *Get Started:*
-Use /subscribe to start receiving daily Bible readings at 4:00 AM GMT!
-
-📖 *Try These Commands:*
-• /today - Get today's reading
-• /day [number] - Get specific day
-• /search [book] - Find a Bible book"""
-        
-        await update.message.reply_text(status_message, parse_mode='Markdown')
-    
     async def search_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        # Ensure user is subscribed
+        self._ensure_subscribed(update.effective_user.id)
         """Handle /search command - search for Bible books in the reading plan"""
         if not context.args:
             await update.message.reply_text(
@@ -439,8 +329,11 @@ Use /subscribe to start receiving daily Bible readings at 4:00 AM GMT!
     
     async def handle_query(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle text queries (non-command messages)"""
-        text = update.message.text.lower().strip()
+        # Ensure user is subscribed
         user_id = update.effective_user.id
+        self._ensure_subscribed(user_id)
+        
+        text = update.message.text.lower().strip()
         
         # Check for day number queries
         day_match = re.search(r'\bday\s+(\d+)\b', text)
@@ -474,7 +367,7 @@ Use /subscribe to start receiving daily Bible readings at 4:00 AM GMT!
             "I can help you with Bible readings! Try:\n\n"
             "• /today - Get today's reading\n"
             "• /day 45 - Get reading for day 45\n"
-            "• /subscribe - Get daily messages\n"
+            "• /search [book] - Find a Bible book\n"
             "• /help - See all commands"
         )
     
