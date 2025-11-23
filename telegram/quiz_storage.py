@@ -5,6 +5,7 @@ Storage for quiz scores and active quiz sessions
 import json
 import os
 import logging
+import shutil
 
 logger = logging.getLogger(__name__)
 
@@ -12,6 +13,24 @@ logger = logging.getLogger(__name__)
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 SCORES_FILE = os.path.join(SCRIPT_DIR, "quiz_scores.json")
 ACTIVE_QUIZZES_FILE = os.path.join(SCRIPT_DIR, "active_quizzes.json")
+
+def _fix_storage_file(file_path):
+    """Fix storage file if it's a directory (Docker volume mount issue)"""
+    if os.path.exists(file_path) and os.path.isdir(file_path):
+        logger.error(f"Storage file path is a directory! Cannot remove mounted directory: {file_path}")
+        logger.error("Please stop the container, remove the directory on the host, and create a file instead:")
+        logger.error(f"  rm -rf {file_path}")
+        logger.error(f"  echo '{{}}' > {file_path}")
+        logger.error("Then restart the container.")
+        return False
+    return True
+
+# Try to fix storage files on module load (non-fatal if it fails)
+try:
+    _fix_storage_file(SCORES_FILE)
+    _fix_storage_file(ACTIVE_QUIZZES_FILE)
+except Exception as e:
+    logger.error(f"Error checking storage files: {e}")
 
 def load_quiz_scores():
     """Load quiz scores from file"""
@@ -76,6 +95,12 @@ def update_user_score(user_id, correct, total):
 
 def load_active_quizzes():
     """Load active quiz sessions"""
+    # Check if storage file is a directory
+    if os.path.exists(ACTIVE_QUIZZES_FILE) and os.path.isdir(ACTIVE_QUIZZES_FILE):
+        logger.error(f"Storage file is still a directory! Attempting to fix: {ACTIVE_QUIZZES_FILE}")
+        _fix_storage_file(ACTIVE_QUIZZES_FILE)
+        return {}
+    
     if not os.path.exists(ACTIVE_QUIZZES_FILE):
         return {}
     
@@ -89,6 +114,12 @@ def load_active_quizzes():
 def save_active_quizzes(quizzes):
     """Save active quiz sessions"""
     try:
+        # Check if storage file is a directory
+        if os.path.exists(ACTIVE_QUIZZES_FILE) and os.path.isdir(ACTIVE_QUIZZES_FILE):
+            logger.error(f"Storage file is a directory! Attempting to fix: {ACTIVE_QUIZZES_FILE}")
+            _fix_storage_file(ACTIVE_QUIZZES_FILE)
+            return False
+        
         with open(ACTIVE_QUIZZES_FILE, 'w') as f:
             json.dump(quizzes, f, indent=2)
         return True

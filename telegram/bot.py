@@ -402,27 +402,30 @@ This bot follows a complete Bible in a Year reading plan, combining Old Testamen
         
         start_quiz_session(user_id, 0, question)
         
-        # Format question with options
+        # Format question with options (escape Markdown special characters)
         options_text = ""
         for i, option in enumerate(question['options']):
-            options_text += f"{i+1}. {option}\n"
+            # Escape Markdown special characters in options
+            escaped_option = option.replace('*', '\\*').replace('_', '\\_').replace('[', '\\[').replace(']', '\\]').replace('(', '\\(').replace(')', '\\)')
+            options_text += f"{i+1}\\. {escaped_option}\n"
         
         # Build difficulty and category info
         diff_info = f"Difficulty: {question.get('difficulty', 'unknown').title()}\n" if question.get('difficulty') else ""
         cat_info = f"Category: {CATEGORIES.get(question.get('category', ''), 'General')}\n" if question.get('category') else ""
         
-        quiz_message = f"""🎯 *Bible Quiz Started!*
+        # Escape special Markdown characters in question
+        question_text = question['question'].replace('*', '\\*').replace('_', '\\_').replace('[', '\\[').replace(']', '\\]').replace('(', '\\(').replace(')', '\\)')
+        
+        quiz_message = f"""🎯 *Bible Quiz Started\\!*
 
-{diff_info}{cat_info}
-*Question:*
-{question['question']}
+{diff_info}{cat_info}*Question:*
+{question_text}
 
 *Options:*
 {options_text}
+Reply with the *number* \\(1\\-4\\) of your answer, or type the answer text\\.
 
-Reply with the *number* (1-4) of your answer, or type the answer text.
-
-Use /quiz_stop to end the quiz."""
+Use /quiz_stop to end the quiz\\."""
         
         await update.message.reply_text(quiz_message, parse_mode='Markdown')
         logger.info(f"User {user_id} started a quiz (difficulty: {difficulty}, category: {category})")
