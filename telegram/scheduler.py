@@ -35,6 +35,11 @@ def run_bot():
 
 def main():
     """Main scheduler function"""
+    # Load and log existing subscribers on startup
+    from user_storage import get_all_subscribed_users
+    existing_users = get_all_subscribed_users()
+    logger.info(f"Scheduler starting - {len(existing_users)} subscribers will receive daily messages at 4:00 AM GMT")
+    
     # Schedule the bot to run daily at 4:00 AM GMT
     schedule.every().day.at("04:00").do(run_bot)
     

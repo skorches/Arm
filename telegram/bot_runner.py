@@ -25,6 +25,13 @@ def main():
         logger.error("TELEGRAM_BOT_TOKEN not found in environment variables")
         return
     
+    # Load and log existing subscribers on startup
+    from user_storage import get_all_subscribed_users
+    existing_users = get_all_subscribed_users()
+    logger.info(f"Bot starting - Loaded {len(existing_users)} existing subscribers")
+    if existing_users:
+        logger.info(f"Existing subscribers: {existing_users[:10]}{'...' if len(existing_users) > 10 else ''}")
+    
     bot = BibleVerseBot(bot_token)
     logger.info("Starting interactive bot (handles user queries)...")
     bot.run()
