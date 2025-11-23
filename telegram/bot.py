@@ -23,7 +23,8 @@ from quiz_questions import (
 from bible_qa import find_answer, get_all_topics
 from quiz_storage import (
     get_user_score, update_user_score, start_quiz_session,
-    get_quiz_session, update_quiz_session, end_quiz_session
+    get_quiz_session, update_quiz_session, end_quiz_session,
+    load_active_quizzes, save_active_quizzes
 )
 
 # Load environment variables
@@ -615,21 +616,55 @@ Keep learning! Use /quiz to take another quiz."""
             # Send feedback
             correct_option = question_data['options'][question_data['correct']]
             if is_correct:
-                feedback = f"✅ *Correct!*\n\nThe answer is: *{correct_option}*\n📖 {question_data['reference']}\n\n"
+                feedback = f"✅ <b>Correct!</b>\n\nThe answer is: <b>{correct_option}</b>\n📖 {question_data['reference']}\n\n"
             else:
-                feedback = f"❌ *Incorrect*\n\nThe correct answer is: *{correct_option}*\n📖 {question_data['reference']}\n\n"
+                feedback = f"❌ <b>Incorrect</b>\n\nThe correct answer is: <b>{correct_option}</b>\n📖 {question_data['reference']}\n\n"
             
-            feedback += f"*Your Score:* {new_score}/{new_total}\n\n"
-            feedback += "Use /quiz to get another question, or /quiz_stop to end the quiz."
+            feedback += f"<b>Your Score:</b> {new_score}/{new_total}\n\n"
             
-            await update.message.reply_text(feedback, parse_mode='Markdown')
+            await update.message.reply_text(feedback, parse_mode='HTML')
             
-            # End the quiz session after answering and save score
-            end_quiz_session(user_id)
-            update_user_score(user_id, new_score, new_total)
+            # Save score so far
             update_user_score(user_id, new_score, new_total)
             
             logger.info(f"User {user_id} answered quiz question: {'correct' if is_correct else 'incorrect'}")
+            
+            # Automatically continue with another question
+            await asyncio.sleep(1)  # Small delay before next question
+            
+            # Get a new random question (keep same difficulty/category if possible)
+            new_question = get_random_question()
+            
+            # Update the quiz session with new question while preserving score
+            quizzes = load_active_quizzes()
+            user_id_str = str(user_id)
+            if user_id_str in quizzes:
+                quizzes[user_id_str]['question_data'] = new_question
+                quizzes[user_id_str]['question_index'] = 0
+                # Keep the existing score and total
+                save_active_quizzes(quizzes)
+            
+            # Format new question with options
+            new_options_text = ""
+            for i, option in enumerate(new_question['options']):
+                new_options_text += f"{i+1}. {option}\n"
+            
+            # Build difficulty and category info
+            diff_info = f"Difficulty: {new_question.get('difficulty', 'unknown').title()}\n" if new_question.get('difficulty') else ""
+            cat_info = f"Category: {CATEGORIES.get(new_question.get('category', ''), 'General')}\n" if new_question.get('category') else ""
+            
+            next_question_msg = f"""🎯 <b>Next Question</b>
+
+{diff_info}{cat_info}<b>Question:</b>
+{new_question['question']}
+
+<b>Options:</b>
+{new_options_text}
+Reply with the <b>number</b> (1-4) of your answer, or type the answer text.
+
+Use /quiz_stop to end the quiz."""
+            
+            await update.message.reply_text(next_question_msg, parse_mode='HTML')
             return
         
         # Check for day number queries
