@@ -237,3 +237,5 @@ def get_all_topics():
     """Get a list of all topics/questions available"""
     return [qa["question"] for qa in BIBLE_QA]
 
+
+
