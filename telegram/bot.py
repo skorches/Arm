@@ -11,7 +11,7 @@ import re
 from datetime import datetime, timedelta
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, CallbackQueryHandler
-from telegram.error import TelegramError, Forbidden
+from telegram.error import TelegramError, Forbidden, BadRequest
 from dotenv import load_dotenv
 from reading_plan import get_reading_for_day, READING_PLANS
 from user_storage import add_user, is_subscribed, get_all_subscribed_users, remove_user
@@ -34,6 +34,17 @@ from reading_progress import (
 from daily_quiz import (
     get_today_quiz_question, mark_daily_quiz_completed,
     has_completed_daily_quiz, get_daily_quiz_stats, get_daily_quiz_leaderboard
+)
+from verses import (
+    get_verse_of_the_day, search_verses, get_verse_by_reference
+)
+from achievements import (
+    check_and_award_achievements, get_user_achievements,
+    get_achievement_display, ACHIEVEMENTS
+)
+from reminders import (
+    set_reminder, remove_reminder, disable_reminders, enable_reminders,
+    get_user_reminders, parse_time_string
 )
 
 # Load environment variables
@@ -863,8 +874,9 @@ This bot follows a complete Bible in a Year reading plan, combining Old Testamen
         
         # Build rank info
         rank_info = ""
-        if rank:
-            rank_info = f"🏅 *Rank:* #{rank}\n"
+        user_rank, total_players = get_user_rank(user_id)
+        if user_rank:
+            rank_info = f"🏅 *Rank:* #{user_rank}\n"
         
         score_message = f"""📊 *Your Quiz Statistics*
 
@@ -2071,6 +2083,33 @@ You don't have any reminders set.
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
     
+    async def safe_edit_message(self, query, text, parse_mode=None, reply_markup=None):
+        """Safely edit a message, handling 'message not modified' errors"""
+        try:
+            await query.edit_message_text(
+                text,
+                parse_mode=parse_mode,
+                reply_markup=reply_markup
+            )
+        except BadRequest as e:
+            # "Message is not modified" is not a real error - just ignore it
+            if "message is not modified" in str(e).lower():
+                logger.debug(f"Message not modified (same content): {e}")
+                return
+            # For other BadRequest errors (like parsing errors), log and try to send new message
+            logger.error(f"BadRequest error editing message: {e}")
+            try:
+                await query.message.reply_text(
+                    text,
+                    parse_mode=parse_mode,
+                    reply_markup=reply_markup
+                )
+            except Exception as e2:
+                logger.error(f"Error sending new message: {e2}")
+        except Exception as e:
+            logger.error(f"Unexpected error editing message: {e}")
+            raise
+    
     async def handle_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle inline button callbacks"""
         query = update.callback_query
@@ -2082,7 +2121,8 @@ You don't have any reminders set.
         
         try:
             if callback_data == "menu_main":
-                await query.edit_message_text(
+                await self.safe_edit_message(
+                    query,
                     "📱 *Main Menu*\n\nChoose an option:",
                     parse_mode='Markdown',
                     reply_markup=self.get_main_menu_keyboard()
@@ -2094,7 +2134,7 @@ You don't have any reminders set.
                 encouragement = self.get_encouragement(day_number)
                 message = self.format_message(day_number, date_str, reading, encouragement)
                 mark_day_completed(user_id, day_number)
-                await query.edit_message_text(
+                await self.safe_edit_message(query, 
                     message,
                     parse_mode='Markdown',
                     reply_markup=self.get_reading_menu_keyboard()
@@ -2133,7 +2173,7 @@ You don't have any reminders set.
                     [InlineKeyboardButton("🔙 Main Menu", callback_data="menu_main")]
                 ]
                 
-                await query.edit_message_text(
+                await self.safe_edit_message(query, 
                     progress_text,
                     parse_mode='Markdown',
                     reply_markup=InlineKeyboardMarkup(keyboard)
@@ -2160,7 +2200,7 @@ You don't have any reminders set.
                     [InlineKeyboardButton("🔙 Main Menu", callback_data="menu_main")]
                 ]
                 
-                await query.edit_message_text(
+                await self.safe_edit_message(query, 
                     streak_text,
                     parse_mode='Markdown',
                     reply_markup=InlineKeyboardMarkup(keyboard)
@@ -2177,7 +2217,7 @@ Choose your difficulty level:
 
 *280+ questions covering all 66 books of the Bible!*"""
                 
-                await query.edit_message_text(
+                await self.safe_edit_message(query, 
                     quiz_text,
                     parse_mode='Markdown',
                     reply_markup=self.get_quiz_menu_keyboard()
@@ -2187,7 +2227,7 @@ Choose your difficulty level:
                 # Start quiz based on difficulty
                 active_quiz = get_quiz_session(user_id)
                 if active_quiz:
-                    await query.edit_message_text(
+                    await self.safe_edit_message(query, 
                         "🎯 *You already have an active quiz!*\n\n"
                         f"Current score: {active_quiz['score']}/{active_quiz['total']}\n\n"
                         "Answer the current question or use /quiz_stop to start a new quiz.",
@@ -2237,7 +2277,7 @@ Choose your difficulty level:
 
 <b>Tap your answer below:</b>"""
                 
-                await query.edit_message_text(
+                await self.safe_edit_message(query, 
                     quiz_message, 
                     parse_mode='HTML',
                     reply_markup=self.get_quiz_answer_keyboard(question)
@@ -2247,7 +2287,7 @@ Choose your difficulty level:
                 # Check if already completed
                 if has_completed_daily_quiz(user_id):
                     stats = get_daily_quiz_stats(user_id)
-                    await query.edit_message_text(
+                    await self.safe_edit_message(query, 
                         f"✅ *Daily Challenge Completed!*\n\n"
                         f"You've already completed today's challenge!\n\n"
                         f"*Your Daily Challenge Stats:*\n"
@@ -2266,7 +2306,7 @@ Choose your difficulty level:
                 # Check if user has active quiz
                 active_quiz = get_quiz_session(user_id)
                 if active_quiz:
-                    await query.edit_message_text(
+                    await self.safe_edit_message(query, 
                         "🎯 *You already have an active quiz!*\n\n"
                         f"Current score: {active_quiz['score']}/{active_quiz['total']}\n\n"
                         "Complete or stop your current quiz first.",
@@ -2306,7 +2346,7 @@ Choose your difficulty level:
 
 💡 <i>Complete today's challenge to earn points and maintain your streak!</i>"""
                 
-                await query.edit_message_text(
+                await self.safe_edit_message(query, 
                     quiz_message,
                     parse_mode='HTML',
                     reply_markup=self.get_quiz_answer_keyboard(question)
@@ -2334,7 +2374,7 @@ Choose your difficulty level:
                     [InlineKeyboardButton("🔙 Main Menu", callback_data="menu_main")]
                 ]
                 
-                await query.edit_message_text(
+                await self.safe_edit_message(query, 
                     verse_text,
                     parse_mode='HTML',
                     reply_markup=InlineKeyboardMarkup(keyboard)
@@ -2370,7 +2410,7 @@ Choose your difficulty level:
                     [InlineKeyboardButton("🔙 Main Menu", callback_data="menu_main")]
                 ]
                 
-                await query.edit_message_text(
+                await self.safe_edit_message(query, 
                     display,
                     parse_mode='Markdown',
                     reply_markup=InlineKeyboardMarkup(keyboard)
@@ -2417,7 +2457,7 @@ You don't have any reminders set.
                     [InlineKeyboardButton("🔙 Main Menu", callback_data="menu_main")]
                 ]
                 
-                await query.edit_message_text(
+                await self.safe_edit_message(query, 
                     reminder_text,
                     parse_mode='Markdown',
                     reply_markup=InlineKeyboardMarkup(keyboard)
@@ -2453,7 +2493,7 @@ You don't have any reminders set.
                     [InlineKeyboardButton("🔙 Main Menu", callback_data="menu_main")]
                 ]
                 
-                await query.edit_message_text(
+                await self.safe_edit_message(query, 
                     leaderboard_text,
                     parse_mode='Markdown',
                     reply_markup=InlineKeyboardMarkup(keyboard)
@@ -2504,7 +2544,7 @@ You haven't answered any questions yet!
                     [InlineKeyboardButton("🔙 Main Menu", callback_data="menu_main")]
                 ]
                 
-                await query.edit_message_text(
+                await self.safe_edit_message(query, 
                     score_text,
                     parse_mode='Markdown',
                     reply_markup=InlineKeyboardMarkup(keyboard)
@@ -2558,7 +2598,7 @@ You haven't answered any questions yet!
                     [InlineKeyboardButton("🔙 Main Menu", callback_data="menu_main")]
                 ]
                 
-                await query.edit_message_text(
+                await self.safe_edit_message(query, 
                     stats_text,
                     parse_mode='Markdown',
                     reply_markup=InlineKeyboardMarkup(keyboard)
@@ -2592,7 +2632,7 @@ Type your question or use these common questions:
                     [InlineKeyboardButton("🔙 Main Menu", callback_data="menu_main")]
                 ]
                 
-                await query.edit_message_text(
+                await self.safe_edit_message(query, 
                     ask_text,
                     parse_mode='Markdown',
                     reply_markup=InlineKeyboardMarkup(keyboard)
@@ -2618,7 +2658,7 @@ Type the name of a Bible book to find which days include it.
                     [InlineKeyboardButton("🔙 Main Menu", callback_data="menu_main")]
                 ]
                 
-                await query.edit_message_text(
+                await self.safe_edit_message(query, 
                     search_text,
                     parse_mode='Markdown',
                     reply_markup=InlineKeyboardMarkup(keyboard)
@@ -2630,14 +2670,14 @@ Type the name of a Bible book to find which days include it.
                 encouragement = self.get_encouragement(day_number)
                 message = self.format_message(day_number, date_str, reading, encouragement)
                 mark_day_completed(user_id, day_number)
-                await query.edit_message_text(
+                await self.safe_edit_message(query, 
                     message,
                     parse_mode='Markdown',
                     reply_markup=self.get_reading_menu_keyboard()
                 )
             
             elif callback_data == "reading_pick":
-                await query.edit_message_text(
+                await self.safe_edit_message(query, 
                     "📅 *Pick a Day*\n\n"
                     "Type a day number (1-365) or use:\n"
                     "/day [number]\n\n"
@@ -2691,13 +2731,13 @@ Type the name of a Bible book to find which days include it.
                         [InlineKeyboardButton("🔙 Main Menu", callback_data="menu_main")]
                     ]
                     
-                    await query.edit_message_text(
+                    await self.safe_edit_message(query, 
                         message,
                         parse_mode='Markdown',
                         reply_markup=InlineKeyboardMarkup(keyboard)
                     )
                 else:
-                    await query.edit_message_text(
+                    await self.safe_edit_message(query, 
                         "✅ Quiz session ended.\n\n"
                         "Tap '🎯 Start Quiz' to start a new quiz!",
                         parse_mode='Markdown',
@@ -2711,7 +2751,7 @@ Type the name of a Bible book to find which days include it.
                     active_quiz = self._in_memory_quizzes[str(user_id)]
                 
                 if not active_quiz:
-                    await query.edit_message_text(
+                    await self.safe_edit_message(query, 
                         "Your quiz session has ended. Please start a new one.",
                         reply_markup=self.get_quick_actions_keyboard()
                     )
@@ -2777,7 +2817,7 @@ Type the name of a Bible book to find which days include it.
                         [InlineKeyboardButton("🔙 Main Menu", callback_data="menu_main")]
                     ]
                     
-                    await query.edit_message_text(
+                    await self.safe_edit_message(query, 
                         completion_msg,
                         parse_mode='HTML',
                         reply_markup=InlineKeyboardMarkup(keyboard)
@@ -2838,7 +2878,7 @@ Type the name of a Bible book to find which days include it.
 
 <b>Tap your answer below:</b>"""
                 
-                await query.edit_message_text(
+                await self.safe_edit_message(query, 
                     next_question_msg,
                     parse_mode='HTML',
                     reply_markup=self.get_quiz_answer_keyboard(new_question)
@@ -2876,7 +2916,7 @@ Everything is button-based! Just tap the buttons to interact.
                     [InlineKeyboardButton("🔙 Main Menu", callback_data="menu_main")]
                 ]
                 
-                await query.edit_message_text(
+                await self.safe_edit_message(query, 
                     help_text,
                     parse_mode='Markdown',
                     reply_markup=InlineKeyboardMarkup(keyboard)
@@ -2884,7 +2924,7 @@ Everything is button-based! Just tap the buttons to interact.
             
             else:
                 # Default: return to main menu
-                await query.edit_message_text(
+                await self.safe_edit_message(query, 
                     "📱 *Main Menu*\n\nChoose an option:",
                     parse_mode='Markdown',
                     reply_markup=self.get_main_menu_keyboard()
@@ -2892,10 +2932,22 @@ Everything is button-based! Just tap the buttons to interact.
             
         except Exception as e:
             logger.error(f"Error handling callback {callback_data}: {e}", exc_info=True)
-            await query.edit_message_text(
-                "❌ An error occurred. Please try again or use /menu to return to the main menu.",
-                reply_markup=self.get_main_menu_keyboard()
-            )
+            try:
+                await self.safe_edit_message(
+                    query,
+                    "❌ An error occurred. Please try again or use /menu to return to the main menu.",
+                    reply_markup=self.get_main_menu_keyboard()
+                )
+            except Exception as e2:
+                logger.error(f"Error sending error message: {e2}")
+                # Try to send as new message
+                try:
+                    await query.message.reply_text(
+                        "❌ An error occurred. Please try again or use /menu to return to the main menu.",
+                        reply_markup=self.get_main_menu_keyboard()
+                    )
+                except:
+                    pass
     
     def run(self):
         """Start the bot"""
