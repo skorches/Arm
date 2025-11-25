@@ -9,7 +9,7 @@ import logging
 import asyncio
 import re
 from datetime import datetime, timedelta
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, CallbackQueryHandler
 from telegram.error import TelegramError, Forbidden
 from dotenv import load_dotenv
@@ -163,6 +163,36 @@ class BibleVerseBot:
 #BibleInAYear #Day{day_number}"""
         return message
     
+    def get_main_reply_keyboard(self):
+        """Create persistent reply keyboard (always visible buttons)"""
+        keyboard = [
+            [KeyboardButton("📖 Today's Reading"), KeyboardButton("📊 My Progress")],
+            [KeyboardButton("🎯 Start Quiz"), KeyboardButton("❓ Ask Question")],
+            [KeyboardButton("📈 Leaderboard"), KeyboardButton("🔥 My Streak")],
+            [KeyboardButton("📚 Search"), KeyboardButton("ℹ️ Help")]
+        ]
+        return ReplyKeyboardMarkup(keyboard, resize_keyboard=True, persistent=True)
+    
+    def get_quiz_reply_keyboard(self):
+        """Create quiz difficulty reply keyboard"""
+        keyboard = [
+            [KeyboardButton("🟢 Easy Quiz"), KeyboardButton("🟡 Medium Quiz")],
+            [KeyboardButton("🔴 Hard Quiz"), KeyboardButton("🎲 Random Quiz")],
+            [KeyboardButton("📊 My Score"), KeyboardButton("🏆 Leaderboard")],
+            [KeyboardButton("🔙 Main Menu")]
+        ]
+        return ReplyKeyboardMarkup(keyboard, resize_keyboard=True, persistent=True)
+    
+    def get_quiz_answer_keyboard(self, question_data):
+        """Create keyboard with quiz answer options as buttons"""
+        options = question_data['options']
+        keyboard = [
+            [KeyboardButton(f"1️⃣ {options[0]}"), KeyboardButton(f"2️⃣ {options[1]}")],
+            [KeyboardButton(f"3️⃣ {options[2]}"), KeyboardButton(f"4️⃣ {options[3]}")],
+            [KeyboardButton("⏹️ Stop Quiz")]
+        ]
+        return ReplyKeyboardMarkup(keyboard, resize_keyboard=True, persistent=True)
+    
     async def start_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle /start command"""
         user = update.effective_user
@@ -174,25 +204,25 @@ class BibleVerseBot:
         
         day_number, date_str = self.get_day_of_year()
         
-        welcome_message = f"""Welcome to the Bible in a Year Bot, {user.first_name}! 🙏
+        welcome_message = f"""📖 *Welcome to Bible in a Year Bot, {user.first_name}!* 🙏
 
-I'll help you read through the Bible in 365 days.
+*Everything is button-based - no typing needed!*
 
-*Available Commands:*
-/start - Show this welcome message
-/today - Get today's reading
-/day [number] - Get reading for a specific day (1-365)
-/search [book] - Search for a Bible book in the reading plan
-/help - Show all commands
+Just tap the buttons below to:
+• 📖 Read today's Bible passage
+• 🎯 Test your knowledge with quizzes
+• 📊 Track your reading progress
+• ❓ Ask Bible questions
+• 🏆 Compete on the leaderboard
 
-⏰ *Daily Messages:*
-You'll receive a message every day at 4:00 AM GMT with that day's reading.
-
-*Try it now:*
-Send /today to see today's reading!"""
+*Use the buttons below to get started!* 👇"""
         
         try:
-            await update.message.reply_text(welcome_message, parse_mode='Markdown')
+            await update.message.reply_text(
+                welcome_message, 
+                parse_mode='Markdown',
+                reply_markup=self.get_main_reply_keyboard()
+            )
             logger.info(f"User {user.id} ({user.username}) started the bot")
         except Forbidden:
             # User blocked the bot - remove from subscriptions
@@ -206,7 +236,12 @@ Send /today to see today's reading!"""
                 reading = self.get_bible_reading(day_number)
                 encouragement = self.get_encouragement(day_number)
                 message = self.format_message(day_number, date_str, reading, encouragement)
-                await update.message.reply_text(message, parse_mode='Markdown')
+                mark_day_completed(user_id, day_number)
+                await update.message.reply_text(
+                    message, 
+                    parse_mode='Markdown',
+                    reply_markup=self.get_main_reply_keyboard()
+                )
                 logger.info(f"Sent today's reading to new user {user_id}")
             except Forbidden:
                 # User blocked the bot - remove from subscriptions
@@ -553,13 +588,13 @@ This bot follows a complete Bible in a Year reading plan, combining Old Testamen
 {diff_info}{cat_info}<b>Question:</b>
 {question['question']}
 
-<b>Options:</b>
-{options_text}
-Reply with the <b>number</b> (1-4) of your answer, or type the answer text.
-
-Use /quiz_stop to end the quiz."""
+<b>Tap your answer below:</b>"""
         
-        await update.message.reply_text(quiz_message, parse_mode='HTML')
+        await update.message.reply_text(
+            quiz_message, 
+            parse_mode='HTML',
+            reply_markup=self.get_quiz_answer_keyboard(question)
+        )
         logger.info(f"User {user_id} started a quiz (difficulty: {difficulty}, category: {category})")
     
     async def quiz_easy_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -609,13 +644,13 @@ Use /quiz_stop to end the quiz."""
 <b>Question:</b>
 {question['question']}
 
-<b>Options:</b>
-{options_text}
-Reply with the <b>number</b> (1-4) of your answer, or type the answer text.
-
-Use /quiz_stop to end the quiz."""
+<b>Tap your answer below:</b>"""
         
-        await update.message.reply_text(quiz_message, parse_mode='HTML')
+        await update.message.reply_text(
+            quiz_message, 
+            parse_mode='HTML',
+            reply_markup=self.get_quiz_answer_keyboard(question)
+        )
         logger.info(f"User {user_id} started an easy quiz")
     
     async def quiz_medium_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -665,13 +700,13 @@ Use /quiz_stop to end the quiz."""
 <b>Question:</b>
 {question['question']}
 
-<b>Options:</b>
-{options_text}
-Reply with the <b>number</b> (1-4) of your answer, or type the answer text.
-
-Use /quiz_stop to end the quiz."""
+<b>Tap your answer below:</b>"""
         
-        await update.message.reply_text(quiz_message, parse_mode='HTML')
+        await update.message.reply_text(
+            quiz_message, 
+            parse_mode='HTML',
+            reply_markup=self.get_quiz_answer_keyboard(question)
+        )
         logger.info(f"User {user_id} started a medium quiz")
     
     async def quiz_hard_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -721,13 +756,13 @@ Use /quiz_stop to end the quiz."""
 <b>Question:</b>
 {question['question']}
 
-<b>Options:</b>
-{options_text}
-Reply with the <b>number</b> (1-4) of your answer, or type the answer text.
-
-Use /quiz_stop to end the quiz."""
+<b>Tap your answer below:</b>"""
         
-        await update.message.reply_text(quiz_message, parse_mode='HTML')
+        await update.message.reply_text(
+            quiz_message, 
+            parse_mode='HTML',
+            reply_markup=self.get_quiz_answer_keyboard(question)
+        )
         logger.info(f"User {user_id} started a hard quiz")
     
     async def score_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -853,7 +888,11 @@ Keep learning! Use /quiz to take another quiz."""
         leaderboard_text += "• /quiz_hard - Hard questions\n"
         leaderboard_text += "• /score - Your stats"
         
-        await update.message.reply_text(leaderboard_text, parse_mode='Markdown')
+        await update.message.reply_text(
+            leaderboard_text, 
+            parse_mode='Markdown',
+            reply_markup=self.get_main_reply_keyboard()
+        )
     
     async def quiz_stop_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle /quiz_stop command - stop current quiz"""
@@ -875,17 +914,21 @@ Keep learning! Use /quiz to take another quiz."""
                 await update.message.reply_text(
                     f"✅ *Quiz Ended*\n\n"
                     f"Final Score: {session['score']}/{session['total']} ({accuracy:.1f}%)\n\n"
-                    f"Use /quiz to start a new quiz!"
+                    f"Tap '🎯 Start Quiz' to start a new quiz!",
+                    parse_mode='Markdown',
+                    reply_markup=self.get_main_reply_keyboard()
                 )
             else:
                 await update.message.reply_text(
                     "✅ Quiz session ended.\n\n"
-                    "Use /quiz to start a new quiz!"
+                    "Tap '🎯 Start Quiz' to start a new quiz!",
+                    reply_markup=self.get_main_reply_keyboard()
                 )
         else:
             await update.message.reply_text(
                 "You don't have an active quiz session.\n\n"
-                "Use /quiz to start a new quiz!"
+                "Tap '🎯 Start Quiz' to start a new quiz!",
+                reply_markup=self.get_main_reply_keyboard()
             )
     
     async def ask_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -964,13 +1007,149 @@ Keep learning! Use /quiz to take another quiz."""
             )
     
     async def handle_query(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Handle text queries (non-command messages)"""
+        """Handle text queries (non-command messages) - now handles button presses"""
         # Ensure user is subscribed
         user_id = update.effective_user.id
         self._ensure_subscribed(user_id)
         
         text = update.message.text.strip()
         text_lower = text.lower()
+        
+        # Handle button presses (reply keyboard)
+        if text == "📖 Today's Reading":
+            await self.today_command(update, context)
+            return
+        elif text == "📊 My Progress":
+            await self.progress_command(update, context)
+            return
+        elif text == "🎯 Start Quiz":
+            # Show quiz menu
+            quiz_text = """🎯 *Bible Quiz*
+
+Choose your difficulty level:
+• 🟢 Easy - Beginner questions
+• 🟡 Medium - Intermediate questions  
+• 🔴 Hard - Advanced questions
+• 🎲 Random - Mixed difficulty
+
+*280+ questions covering all 66 books of the Bible!*"""
+            await update.message.reply_text(
+                quiz_text,
+                parse_mode='Markdown',
+                reply_markup=self.get_quiz_reply_keyboard()
+            )
+            return
+        elif text in ["🟢 Easy Quiz", "🟡 Medium Quiz", "🔴 Hard Quiz", "🎲 Random Quiz"]:
+            # Start quiz based on button
+            difficulty = None
+            if text == "🟢 Easy Quiz":
+                difficulty = "easy"
+            elif text == "🟡 Medium Quiz":
+                difficulty = "medium"
+            elif text == "🔴 Hard Quiz":
+                difficulty = "hard"
+            # Random keeps difficulty as None
+            
+            active_quiz = get_quiz_session(user_id)
+            if active_quiz:
+                await update.message.reply_text(
+                    "🎯 *You already have an active quiz!*\n\n"
+                    f"Current score: {active_quiz['score']}/{active_quiz['total']}\n\n"
+                    "Answer the current question or tap '⏹️ Stop Quiz' to end it.",
+                    parse_mode='Markdown',
+                    reply_markup=self.get_quiz_answer_keyboard(active_quiz['question_data'])
+                )
+                return
+            
+            question = get_random_question(difficulty=difficulty)
+            try:
+                start_quiz_session(user_id, 0, question, difficulty=difficulty, category=None)
+            except Exception as e:
+                logger.error(f"Error starting quiz session: {e}")
+            
+            user_id_str = str(user_id)
+            self._in_memory_quizzes[user_id_str] = {
+                'question_index': 0,
+                'question_data': question,
+                'score': 0,
+                'total': 0,
+                'started_at': None,
+                'difficulty': difficulty,
+                'category': None
+            }
+            
+            options_text = ""
+            for i, option in enumerate(question['options']):
+                options_text += f"{i+1}. {option}\n"
+            
+            diff_name = difficulty.title() if difficulty else "Random"
+            quiz_message = f"""🎯 <b>{diff_name} Bible Quiz Started!</b>
+
+<b>Question:</b>
+{question['question']}
+
+<b>Tap your answer below:</b>"""
+            
+            await update.message.reply_text(
+                quiz_message,
+                parse_mode='HTML',
+                reply_markup=self.get_quiz_answer_keyboard(question)
+            )
+            return
+        elif text == "📊 My Score":
+            await self.score_command(update, context)
+            return
+        elif text == "🏆 Leaderboard":
+            await self.leaderboard_command(update, context)
+            return
+        elif text == "❓ Ask Question":
+            topics = get_all_topics()
+            topics_list = "\n".join([f"• {topic}" for topic in topics[:10]])
+            await update.message.reply_text(
+                f"❓ *Ask a Bible Question*\n\n"
+                f"Type your question or use these common questions:\n\n"
+                f"*Examples:*\n"
+                f"• How can I be saved?\n"
+                f"• What does the Bible say about love?\n"
+                f"• How should I pray?\n\n"
+                f"*Topics I can help with:*\n"
+                f"{topics_list}\n"
+                f"... and more!",
+                parse_mode='Markdown',
+                reply_markup=self.get_main_reply_keyboard()
+            )
+            return
+        elif text == "📈 Leaderboard":
+            await self.leaderboard_command(update, context)
+            return
+        elif text == "🔥 My Streak":
+            await self.streak_command(update, context)
+            return
+        elif text == "📚 Search":
+            await update.message.reply_text(
+                "📚 *Search Reading Plan*\n\n"
+                "Type the name of a Bible book to find which days include it.\n\n"
+                "*Examples:*\n"
+                "• Genesis\n"
+                "• Matthew\n"
+                "• Psalms",
+                parse_mode='Markdown',
+                reply_markup=self.get_main_reply_keyboard()
+            )
+            return
+        elif text == "ℹ️ Help":
+            await self.help_command(update, context)
+            return
+        elif text == "🔙 Main Menu":
+            await update.message.reply_text(
+                "📱 *Main Menu*\n\nChoose an option:",
+                parse_mode='Markdown',
+                reply_markup=self.get_main_reply_keyboard()
+            )
+            return
+        elif text == "⏹️ Stop Quiz":
+            await self.quiz_stop_command(update, context)
+            return
         
         # Check if user has an active quiz session (try file storage first, then in-memory fallback)
         active_quiz = None
@@ -989,20 +1168,39 @@ Keep learning! Use /quiz to take another quiz."""
             question_data = active_quiz['question_data']
             user_answer = text_lower.strip()
             
-            # Check if answer is a number (1-4)
-            try:
-                answer_num = int(user_answer) - 1
+            # Check if answer is from button (format: "1️⃣ Option" or just "1️⃣")
+            is_correct = False
+            answer_num = None
+            
+            # Check for button format (emoji + number)
+            if "1️⃣" in text or text.startswith("1"):
+                answer_num = 0
+            elif "2️⃣" in text or text.startswith("2"):
+                answer_num = 1
+            elif "3️⃣" in text or text.startswith("3"):
+                answer_num = 2
+            elif "4️⃣" in text or text.startswith("4"):
+                answer_num = 3
+            else:
+                # Try to parse as number
+                try:
+                    answer_num = int(user_answer) - 1
+                except ValueError:
+                    # Check if answer matches text
+                    correct_answer_text = question_data['options'][question_data['correct']].lower()
+                    is_correct = (user_answer == correct_answer_text or 
+                                user_answer in correct_answer_text or 
+                                correct_answer_text in user_answer)
+            
+            if answer_num is not None:
                 if 0 <= answer_num < len(question_data['options']):
                     is_correct = (answer_num == question_data['correct'])
                 else:
-                    await update.message.reply_text("Please answer with a number between 1 and 4.")
+                    await update.message.reply_text(
+                        "Please tap one of the answer buttons below.",
+                        reply_markup=self.get_quiz_answer_keyboard(question_data)
+                    )
                     return
-            except ValueError:
-                # Check if answer matches text
-                correct_answer_text = question_data['options'][question_data['correct']].lower()
-                is_correct = (user_answer == correct_answer_text or 
-                            user_answer in correct_answer_text or 
-                            correct_answer_text in user_answer)
             
             # Update score
             new_score = active_quiz['score'] + (1 if is_correct else 0)
@@ -1028,7 +1226,11 @@ Keep learning! Use /quiz to take another quiz."""
             
             feedback += f"<b>Your Score:</b> {new_score}/{new_total}\n\n"
             
-            await update.message.reply_text(feedback, parse_mode='HTML')
+            await update.message.reply_text(
+                feedback, 
+                parse_mode='HTML',
+                reply_markup=self.get_quiz_answer_keyboard(question_data)
+            )
             
             # Save score so far (update user info for leaderboard)
             user = update.effective_user
@@ -1317,7 +1519,11 @@ Use /quiz_stop to end the quiz."""
 • /stats - Detailed statistics
 • /today - Read today's passage"""
         
-        await update.message.reply_text(streak_text, parse_mode='Markdown')
+        await update.message.reply_text(
+            streak_text, 
+            parse_mode='Markdown',
+            reply_markup=self.get_main_reply_keyboard()
+        )
     
     async def completed_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle /completed command - mark days as completed"""
@@ -1421,7 +1627,11 @@ Use /quiz_stop to end the quiz."""
 • /streak - Streak information
 • /completed [day] - Mark a day as completed"""
         
-        await update.message.reply_text(stats_text, parse_mode='Markdown')
+        await update.message.reply_text(
+            stats_text, 
+            parse_mode='Markdown',
+            reply_markup=self.get_main_reply_keyboard()
+        )
     
     async def handle_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle inline button callbacks"""
