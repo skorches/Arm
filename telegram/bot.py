@@ -1560,6 +1560,302 @@ Use /quiz_stop to end the quiz."""
         
         return success_count, len(users)
     
+    async def daily_quiz_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /daily_quiz command - take today's special quiz"""
+        user_id = update.effective_user.id
+        self._ensure_subscribed(user_id)
+        
+        # Check if already completed
+        if has_completed_daily_quiz(user_id):
+            stats = get_daily_quiz_stats(user_id)
+            await update.message.reply_text(
+                f"✅ *Daily Challenge Completed!*\n\n"
+                f"You've already completed today's challenge!\n\n"
+                f"*Your Daily Challenge Stats:*\n"
+                f"• Total Completed: {stats['total_completed']}\n"
+                f"• Current Streak: {stats['current_streak']} days\n"
+                f"• Best Score: {stats['best_score']:.1f}%\n\n"
+                f"Come back tomorrow for a new challenge!",
+                parse_mode='Markdown',
+                reply_markup=self.get_quick_actions_keyboard()
+            )
+            return
+        
+        # Get today's question
+        question = get_today_quiz_question()
+        
+        # Check if user has active quiz
+        active_quiz = get_quiz_session(user_id)
+        if active_quiz:
+            await update.message.reply_text(
+                "🎯 *You already have an active quiz!*\n\n"
+                f"Current score: {active_quiz['score']}/{active_quiz['total']}\n\n"
+                "Complete or stop your current quiz first.",
+                parse_mode='Markdown',
+                reply_markup=self.get_quick_actions_keyboard()
+            )
+            return
+        
+        # Start daily quiz session
+        try:
+            start_quiz_session(user_id, 0, question, difficulty=question.get('difficulty'), category=question.get('category'))
+        except Exception as e:
+            logger.error(f"Error starting daily quiz session: {e}")
+        
+        user_id_str = str(user_id)
+        self._in_memory_quizzes[user_id_str] = {
+            'question_index': 0,
+            'question_data': question,
+            'score': 0,
+            'total': 0,
+            'started_at': None,
+            'difficulty': question.get('difficulty'),
+            'category': question.get('category'),
+            'is_daily_quiz': True  # Mark as daily quiz
+        }
+        
+        quiz_message = f"""⭐ <b>Daily Challenge Quiz!</b>
+
+━━━━━━━━━━━━━━━━━━━━
+
+🎯 <b>Today's Special Question:</b>
+{question['question']}
+
+━━━━━━━━━━━━━━━━━━━━
+
+<b>Tap your answer below:</b>
+
+💡 <i>Complete today's challenge to earn points and maintain your streak!</i>"""
+        
+        await update.message.reply_text(
+            quiz_message,
+            parse_mode='HTML',
+            reply_markup=self.get_quiz_answer_keyboard(question)
+        )
+    
+    async def verse_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /verse command - get verse of the day or specific verse"""
+        user_id = update.effective_user.id
+        self._ensure_subscribed(user_id)
+        
+        if not context.args:
+            # Show verse of the day
+            verse_data = get_verse_of_the_day()
+            verse_text = f"""📖 <b>Verse of the Day</b>
+
+━━━━━━━━━━━━━━━━━━━━
+
+<b>{verse_data['reference']}</b>
+
+{verse_data['verse']}
+
+━━━━━━━━━━━━━━━━━━━━
+
+💡 <i>Topic: {verse_data['topic']}</i>
+
+*Use /verse [reference] to get a specific verse*
+*Example: /verse John 3:16*"""
+            
+            keyboard = [
+                [InlineKeyboardButton("📖 Another Verse", callback_data="menu_verse")],
+                [InlineKeyboardButton("🔙 Main Menu", callback_data="menu_main")]
+            ]
+            
+            await update.message.reply_text(
+                verse_text,
+                parse_mode='HTML',
+                reply_markup=InlineKeyboardMarkup(keyboard)
+            )
+            return
+        
+        # Try to get specific verse
+        verse_input = " ".join(context.args)
+        
+        # Try as reference first
+        verse_data = get_verse_by_reference(verse_input)
+        
+        if not verse_data:
+            # Try search
+            matches = search_verses(verse_input)
+            if matches:
+                verse_data = matches[0]  # Use first match
+            else:
+                await update.message.reply_text(
+                    f"❓ *Verse Not Found*\n\n"
+                    f"Couldn't find a verse matching '{verse_input}'.\n\n"
+                    f"*Try:*\n"
+                    f"• /verse - Get today's verse\n"
+                    f"• /verse John 3:16 - Get specific verse\n"
+                    f"• /verse love - Search by keyword",
+                    parse_mode='Markdown',
+                    reply_markup=self.get_quick_actions_keyboard()
+                )
+                return
+        
+        verse_text = f"""📖 <b>{verse_data['reference']}</b>
+
+━━━━━━━━━━━━━━━━━━━━
+
+{verse_data['verse']}
+
+━━━━━━━━━━━━━━━━━━━━
+
+💡 <i>Topic: {verse_data['topic']}</i>"""
+        
+        keyboard = [
+            [InlineKeyboardButton("📖 Another Verse", callback_data="menu_verse")],
+            [InlineKeyboardButton("🔙 Main Menu", callback_data="menu_main")]
+        ]
+        
+        await update.message.reply_text(
+            verse_text,
+            parse_mode='HTML',
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+    
+    async def achievements_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /achievements command - show user's achievements"""
+        user_id = update.effective_user.id
+        self._ensure_subscribed(user_id)
+        
+        # Check for new achievements
+        from reading_progress import get_user_progress
+        from quiz_storage import get_user_score
+        from daily_quiz import get_daily_quiz_stats
+        
+        reading_progress = get_user_progress(user_id)
+        quiz_stats = get_user_score(user_id)
+        daily_quiz_stats = get_daily_quiz_stats(user_id)
+        
+        newly_unlocked = check_and_award_achievements(
+            user_id, reading_progress, quiz_stats, daily_quiz_stats
+        )
+        
+        display = get_achievement_display(user_id)
+        
+        # Show notification if new achievements unlocked
+        if newly_unlocked:
+            notification = "🎉 *New Achievement Unlocked!*\n\n"
+            for achievement_id in newly_unlocked:
+                achievement = ACHIEVEMENTS[achievement_id]
+                notification += f"{achievement['emoji']} *{achievement['name']}*\n"
+                notification += f"   {achievement['description']}\n\n"
+            notification += "━━━━━━━━━━━━━━━━━━━━\n\n"
+            display = notification + display
+        
+        keyboard = [
+            [InlineKeyboardButton("🔙 Main Menu", callback_data="menu_main")]
+        ]
+        
+        await update.message.reply_text(
+            display,
+            parse_mode='Markdown',
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+    
+    async def remind_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /remind command - set reading reminder"""
+        user_id = update.effective_user.id
+        self._ensure_subscribed(user_id)
+        
+        if not context.args:
+            # Show current reminders
+            reminders = get_user_reminders(user_id)
+            if reminders['enabled'] and reminders['times']:
+                times_list = "\n".join([f"• {time}" for time in reminders['times']])
+                reminder_text = f"""⏰ *Your Reading Reminders*
+
+━━━━━━━━━━━━━━━━━━━━
+
+*Reminder Times:*
+{times_list}
+
+━━━━━━━━━━━━━━━━━━━━
+
+*To add a reminder:*
+/remind 8am
+/remind 14:30
+/remind 9:00pm
+
+*To remove a reminder:*
+/remind_off"""
+            else:
+                reminder_text = """⏰ *Reading Reminders*
+
+━━━━━━━━━━━━━━━━━━━━
+
+You don't have any reminders set.
+
+*Set a reminder:*
+/remind 8am
+/remind 14:30
+/remind 9:00pm
+
+*Examples:*
+• /remind 8am - Remind at 8:00 AM
+• /remind 14:30 - Remind at 2:30 PM
+• /remind 9:00pm - Remind at 9:00 PM"""
+            
+            keyboard = [
+                [InlineKeyboardButton("🔙 Main Menu", callback_data="menu_main")]
+            ]
+            
+            await update.message.reply_text(
+                reminder_text,
+                parse_mode='Markdown',
+                reply_markup=InlineKeyboardMarkup(keyboard)
+            )
+            return
+        
+        # Parse time
+        time_str = " ".join(context.args)
+        hour, minute = parse_time_string(time_str)
+        
+        if hour is None:
+            await update.message.reply_text(
+                "❌ *Invalid Time Format*\n\n"
+                "*Examples:*\n"
+                "• /remind 8am\n"
+                "• /remind 14:30\n"
+                "• /remind 9:00pm",
+                parse_mode='Markdown',
+                reply_markup=self.get_quick_actions_keyboard()
+            )
+            return
+        
+        if set_reminder(user_id, hour, minute):
+            await update.message.reply_text(
+                f"✅ *Reminder Set!*\n\n"
+                f"You'll be reminded to read at {hour:02d}:{minute:02d} every day.\n\n"
+                f"*Note:* Reminders are currently being set up. They will be active soon!",
+                parse_mode='Markdown',
+                reply_markup=self.get_quick_actions_keyboard()
+            )
+        else:
+            await update.message.reply_text(
+                "❌ Error setting reminder. Please try again.",
+                reply_markup=self.get_quick_actions_keyboard()
+            )
+    
+    async def remind_off_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /remind_off command - disable reminders"""
+        user_id = update.effective_user.id
+        self._ensure_subscribed(user_id)
+        
+        if disable_reminders(user_id):
+            await update.message.reply_text(
+                "✅ *Reminders Disabled*\n\n"
+                "You won't receive reading reminders anymore.\n\n"
+                "Use /remind [time] to set them again.",
+                parse_mode='Markdown',
+                reply_markup=self.get_quick_actions_keyboard()
+            )
+        else:
+            await update.message.reply_text(
+                "❌ Error disabling reminders. Please try again.",
+                reply_markup=self.get_quick_actions_keyboard()
+            )
+    
     async def test_daily_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle /test_daily command - manually test daily message sending"""
         # Ensure user is subscribed
