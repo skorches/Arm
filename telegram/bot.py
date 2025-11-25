@@ -215,6 +215,80 @@ Send /today to see today's reading!"""
             except Exception as e:
                 logger.error(f"Error sending today's reading to new user {user_id}: {e}")
     
+    def get_main_menu_keyboard(self):
+        """Create main menu inline keyboard"""
+        keyboard = [
+            [
+                InlineKeyboardButton("📖 Today's Reading", callback_data="menu_today"),
+                InlineKeyboardButton("📊 My Progress", callback_data="menu_progress")
+            ],
+            [
+                InlineKeyboardButton("🎯 Start Quiz", callback_data="menu_quiz"),
+                InlineKeyboardButton("❓ Ask Question", callback_data="menu_ask")
+            ],
+            [
+                InlineKeyboardButton("📈 Leaderboard", callback_data="menu_leaderboard"),
+                InlineKeyboardButton("🔥 My Streak", callback_data="menu_streak")
+            ],
+            [
+                InlineKeyboardButton("📚 Search Reading", callback_data="menu_search"),
+                InlineKeyboardButton("ℹ️ Help", callback_data="menu_help")
+            ]
+        ]
+        return InlineKeyboardMarkup(keyboard)
+    
+    def get_quiz_menu_keyboard(self):
+        """Create quiz difficulty selection keyboard"""
+        keyboard = [
+            [
+                InlineKeyboardButton("🟢 Easy", callback_data="quiz_easy"),
+                InlineKeyboardButton("🟡 Medium", callback_data="quiz_medium"),
+                InlineKeyboardButton("🔴 Hard", callback_data="quiz_hard")
+            ],
+            [
+                InlineKeyboardButton("🎲 Random", callback_data="quiz_random"),
+                InlineKeyboardButton("📊 My Score", callback_data="menu_score")
+            ],
+            [
+                InlineKeyboardButton("🏆 Leaderboard", callback_data="menu_leaderboard"),
+                InlineKeyboardButton("🔙 Main Menu", callback_data="menu_main")
+            ]
+        ]
+        return InlineKeyboardMarkup(keyboard)
+    
+    def get_reading_menu_keyboard(self):
+        """Create reading menu keyboard"""
+        keyboard = [
+            [
+                InlineKeyboardButton("📖 Today", callback_data="reading_today"),
+                InlineKeyboardButton("📅 Pick Day", callback_data="reading_pick")
+            ],
+            [
+                InlineKeyboardButton("📊 Progress", callback_data="menu_progress"),
+                InlineKeyboardButton("🔥 Streak", callback_data="menu_streak")
+            ],
+            [
+                InlineKeyboardButton("📚 Search", callback_data="menu_search"),
+                InlineKeyboardButton("🔙 Main Menu", callback_data="menu_main")
+            ]
+        ]
+        return InlineKeyboardMarkup(keyboard)
+    
+    async def menu_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /menu command - show main menu"""
+        user_id = update.effective_user.id
+        self._ensure_subscribed(user_id)
+        
+        menu_text = """📱 *Main Menu*
+
+Choose an option below:"""
+        
+        await update.message.reply_text(
+            menu_text,
+            parse_mode='Markdown',
+            reply_markup=self.get_main_menu_keyboard()
+        )
+    
     async def help_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle /help command"""
         # Ensure user is subscribed
@@ -1348,6 +1422,208 @@ Use /quiz_stop to end the quiz."""
 • /completed [day] - Mark a day as completed"""
         
         await update.message.reply_text(stats_text, parse_mode='Markdown')
+    
+    async def handle_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle inline button callbacks"""
+        query = update.callback_query
+        await query.answer()  # Acknowledge the callback
+        
+        user_id = query.from_user.id
+        self._ensure_subscribed(user_id)
+        callback_data = query.data
+        
+        try:
+            if callback_data == "menu_main":
+                await query.edit_message_text(
+                    "📱 *Main Menu*\n\nChoose an option:",
+                    parse_mode='Markdown',
+                    reply_markup=self.get_main_menu_keyboard()
+                )
+            
+            elif callback_data == "menu_today":
+                day_number, date_str = self.get_day_of_year()
+                reading = self.get_bible_reading(day_number)
+                encouragement = self.get_encouragement(day_number)
+                message = self.format_message(day_number, date_str, reading, encouragement)
+                mark_day_completed(user_id, day_number)
+                await query.edit_message_text(
+                    message,
+                    parse_mode='Markdown',
+                    reply_markup=self.get_reading_menu_keyboard()
+                )
+            
+            elif callback_data == "menu_progress":
+                progress = get_user_progress(user_id)
+                current_streak = get_current_streak(user_id)
+                longest_streak = get_longest_streak(user_id)
+                current_day, _ = self.get_day_of_year()
+                
+                total_days = 365
+                current_year = datetime.now().year
+                if current_year % 4 == 0 and (current_year % 100 != 0 or current_year % 400 == 0):
+                    total_days = 366
+                
+                days_remaining = total_days - current_day
+                progress_bar_length = 20
+                filled = int((progress['completion_percentage'] / 100) * progress_bar_length)
+                progress_bar = "█" * filled + "░" * (progress_bar_length - filled)
+                
+                progress_text = f"""📊 *Your Reading Progress*
+
+📖 *Completion:* {progress['total_completed']}/{total_days} days ({progress['completion_percentage']:.1f}%)
+{progress_bar}
+
+🔥 *Current Streak:* {current_streak} days
+🏆 *Longest Streak:* {longest_streak} days
+
+📅 *Today:* Day {current_day}
+⏳ *Days Remaining:* {days_remaining}"""
+                
+                keyboard = [
+                    [InlineKeyboardButton("🔥 View Streak", callback_data="menu_streak")],
+                    [InlineKeyboardButton("📈 Detailed Stats", callback_data="menu_stats")],
+                    [InlineKeyboardButton("🔙 Main Menu", callback_data="menu_main")]
+                ]
+                
+                await query.edit_message_text(
+                    progress_text,
+                    parse_mode='Markdown',
+                    reply_markup=InlineKeyboardMarkup(keyboard)
+                )
+            
+            elif callback_data == "menu_streak":
+                current_streak = get_current_streak(user_id)
+                longest_streak = get_longest_streak(user_id)
+                current_day, _ = self.get_day_of_year()
+                today_completed = is_day_completed(user_id, current_day)
+                
+                streak_text = f"""🔥 *Your Reading Streak*
+
+📅 *Current Streak:* {current_streak} days
+🏆 *Longest Streak This Year:* {longest_streak} days
+
+{"✅ Today's reading is completed!" if today_completed else "⚠️ Don't forget to read today! Use /today"}
+        
+💪 *Keep it up!* Consistency is key."""
+                
+                keyboard = [
+                    [InlineKeyboardButton("📊 View Progress", callback_data="menu_progress")],
+                    [InlineKeyboardButton("📖 Read Today", callback_data="menu_today")],
+                    [InlineKeyboardButton("🔙 Main Menu", callback_data="menu_main")]
+                ]
+                
+                await query.edit_message_text(
+                    streak_text,
+                    parse_mode='Markdown',
+                    reply_markup=InlineKeyboardMarkup(keyboard)
+                )
+            
+            elif callback_data == "menu_quiz":
+                quiz_text = """🎯 *Bible Quiz*
+
+Choose your difficulty level:
+• 🟢 Easy - Beginner questions
+• 🟡 Medium - Intermediate questions  
+• 🔴 Hard - Advanced questions
+• 🎲 Random - Mixed difficulty
+
+*280+ questions covering all 66 books of the Bible!*"""
+                
+                await query.edit_message_text(
+                    quiz_text,
+                    parse_mode='Markdown',
+                    reply_markup=self.get_quiz_menu_keyboard()
+                )
+            
+            elif callback_data in ["quiz_easy", "quiz_medium", "quiz_hard", "quiz_random"]:
+                # Start quiz based on difficulty
+                active_quiz = get_quiz_session(user_id)
+                if active_quiz:
+                    await query.edit_message_text(
+                        "🎯 *You already have an active quiz!*\n\n"
+                        f"Current score: {active_quiz['score']}/{active_quiz['total']}\n\n"
+                        "Answer the current question or use /quiz_stop to start a new quiz.",
+                        parse_mode='Markdown'
+                    )
+                    return
+                
+                difficulty = None
+                if callback_data == "quiz_easy":
+                    difficulty = "easy"
+                elif callback_data == "quiz_medium":
+                    difficulty = "medium"
+                elif callback_data == "quiz_hard":
+                    difficulty = "hard"
+                # quiz_random keeps difficulty as None
+                
+                question = get_random_question(difficulty=difficulty)
+                try:
+                    start_quiz_session(user_id, 0, question, difficulty=difficulty, category=None)
+                except Exception as e:
+                    logger.error(f"Error starting quiz session: {e}")
+                
+                user_id_str = str(user_id)
+                self._in_memory_quizzes[user_id_str] = {
+                    'question_index': 0,
+                    'question_data': question,
+                    'score': 0,
+                    'total': 0,
+                    'started_at': None,
+                    'difficulty': difficulty,
+                    'category': None
+                }
+                
+                options_text = ""
+                for i, option in enumerate(question['options']):
+                    options_text += f"{i+1}. {option}\n"
+                
+                diff_name = difficulty.title() if difficulty else "Random"
+                quiz_message = f"""🎯 <b>{diff_name} Bible Quiz Started!</b>
+
+<b>Question:</b>
+{question['question']}
+
+<b>Options:</b>
+{options_text}
+Reply with the <b>number</b> (1-4) of your answer."""
+                
+                await query.edit_message_text(quiz_message, parse_mode='HTML')
+            
+            elif callback_data == "menu_help":
+                help_text = """📖 *Bible in a Year Bot - Help*
+
+Use the buttons in the menu to navigate, or type commands like:
+• /today - Today's reading
+• /quiz - Start a quiz
+• /progress - Your progress
+• /help - Full help
+
+*Use /menu to return to the main menu!*"""
+                
+                keyboard = [
+                    [InlineKeyboardButton("🔙 Main Menu", callback_data="menu_main")]
+                ]
+                
+                await query.edit_message_text(
+                    help_text,
+                    parse_mode='Markdown',
+                    reply_markup=InlineKeyboardMarkup(keyboard)
+                )
+            
+            else:
+                # Default: return to main menu
+                await query.edit_message_text(
+                    "📱 *Main Menu*\n\nChoose an option:",
+                    parse_mode='Markdown',
+                    reply_markup=self.get_main_menu_keyboard()
+                )
+            
+        except Exception as e:
+            logger.error(f"Error handling callback {callback_data}: {e}", exc_info=True)
+            await query.edit_message_text(
+                "❌ An error occurred. Please try again or use /menu to return to the main menu.",
+                reply_markup=self.get_main_menu_keyboard()
+            )
     
     def run(self):
         """Start the bot"""
