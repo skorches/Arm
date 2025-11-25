@@ -3,9 +3,7 @@
 Scheduler script to run the bot daily at a specific time
 """
 
-import schedule
 import time
-import asyncio
 import subprocess
 import logging
 import os
@@ -72,28 +70,9 @@ def main():
         current_time = datetime.now()
         logger.info(f"Current time: {current_time.strftime('%Y-%m-%d %H:%M:%S')}")
     
-    # Schedule the bot to run daily at 4:00 AM GMT
-    # Note: schedule library uses system local time, so we rely on TZ=GMT environment variable
-    # We'll also check the time manually to ensure it's GMT
-    def schedule_at_gmt_4am():
-        """Wrapper to ensure we're checking GMT time"""
-        current_time = datetime.now()
-        # Double-check it's actually 4 AM
-        if current_time.hour == 4 and current_time.minute == 0:
-            logger.info(f"Triggering daily sender at GMT 4:00 AM (current time: {current_time})")
-            run_bot()
-        else:
-            logger.warning(f"Scheduled task triggered but time is {current_time}, not 4:00 AM GMT")
-    
-    schedule.every().day.at("04:00").do(schedule_at_gmt_4am)
-    
-    # Log next run time
-    try:
-        next_run = schedule.next_run()
-        if next_run:
-            logger.info(f"Next scheduled execution: {next_run}")
-    except:
-        logger.info("Next scheduled execution: Tomorrow at 04:00 GMT")
+    # We'll use manual GMT time checking for accurate triggering at 4:00 AM GMT
+    # The schedule library is unreliable with timezone changes, so we check manually
+    logger.info("Using manual GMT time checking for daily trigger at 4:00 AM GMT")
     
     # You can also test immediately (uncomment to test)
     # logger.info("TESTING: Running daily sender now...")
@@ -104,27 +83,29 @@ def main():
     
     last_logged_hour = -1
     last_triggered_date = None
+    last_triggered_minute = -1  # Track the minute to prevent multiple triggers in the same minute
     try:
         while True:
-            # Check schedule library
-            schedule.run_pending()
-            
-            # Also manually check if it's 4:00 AM GMT (double-check)
+            # Manually check if it's 4:00 AM GMT
             try:
                 gmt = pytz.timezone('GMT')
                 current_gmt = datetime.now(gmt)
                 current_date = current_gmt.date()
+                current_minute = current_gmt.minute
                 
                 # If it's 4:00 AM GMT and we haven't triggered today
-                if current_gmt.hour == 4 and current_gmt.minute == 0:
-                    if last_triggered_date != current_date:
+                # Check both hour and minute, and ensure we haven't triggered in this exact minute
+                if current_gmt.hour == 4 and current_minute == 0:
+                    if last_triggered_date != current_date or last_triggered_minute != current_minute:
                         logger.info(f"Manual check: It's 4:00 AM GMT! Triggering daily sender...")
                         run_bot()
                         last_triggered_date = current_date
+                        last_triggered_minute = current_minute
                 
                 # Log every hour to confirm scheduler is running
                 if current_gmt.hour != last_logged_hour and current_gmt.minute == 0:
-                    logger.info(f"Scheduler is running... Current GMT time: {current_gmt.strftime('%Y-%m-%d %H:%M:%S %Z')}, Next run: {schedule.next_run()}")
+                    next_trigger = f"Tomorrow at 04:00 GMT" if current_gmt.hour >= 4 else f"Today at 04:00 GMT"
+                    logger.info(f"Scheduler is running... Current GMT time: {current_gmt.strftime('%Y-%m-%d %H:%M:%S %Z')}, Next trigger: {next_trigger}")
                     last_logged_hour = current_gmt.hour
             except Exception as e:
                 logger.error(f"Error in time check: {e}")
