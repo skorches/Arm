@@ -193,7 +193,7 @@ def save_active_quizzes(quizzes):
         logger.error(f"Error saving active quizzes: {e}")
         return False
 
-def start_quiz_session(user_id, question_index, question_data):
+def start_quiz_session(user_id, question_index, question_data, difficulty=None, category=None):
     """Start a new quiz session for a user"""
     quizzes = load_active_quizzes()
     quizzes[str(user_id)] = {
@@ -201,7 +201,9 @@ def start_quiz_session(user_id, question_index, question_data):
         'question_data': question_data,
         'score': 0,
         'total': 0,
-        'started_at': None
+        'started_at': None,
+        'difficulty': difficulty,  # Store difficulty to maintain it throughout session
+        'category': category  # Store category to maintain it throughout session
     }
     return save_active_quizzes(quizzes)
 

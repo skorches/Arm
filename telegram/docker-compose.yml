@@ -11,6 +11,8 @@ services:
       # Persist quiz scores and sessions
       - ./quiz_scores.json:/app/quiz_scores.json
       - ./active_quizzes.json:/app/active_quizzes.json
+      # Persist reading progress
+      - ./reading_progress.json:/app/reading_progress.json
     environment:
       - TZ=GMT
       # Bot token can be set here or in .env file

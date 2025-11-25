@@ -27,6 +27,10 @@ from quiz_storage import (
     load_active_quizzes, save_active_quizzes, get_leaderboard,
     get_user_rank, update_user_info
 )
+from reading_progress import (
+    mark_day_completed, get_user_progress, get_current_streak,
+    get_longest_streak, is_day_completed
+)
 
 # Load environment variables
 load_dotenv()
@@ -66,6 +70,10 @@ class BibleVerseBot:
         self.application.add_handler(CommandHandler("ask", self.ask_command))
         self.application.add_handler(CommandHandler("question", self.ask_command))
         self.application.add_handler(CommandHandler("test_daily", self.test_daily_command))
+        self.application.add_handler(CommandHandler("progress", self.progress_command))
+        self.application.add_handler(CommandHandler("streak", self.streak_command))
+        self.application.add_handler(CommandHandler("completed", self.completed_command))
+        self.application.add_handler(CommandHandler("stats", self.stats_command))
         
         # Message handler for queries (non-command messages)
         self.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_query))
@@ -210,34 +218,58 @@ Send /today to see today's reading!"""
         
         help_text = """📖 *Bible in a Year Bot - Help*
 
-*Commands:*
+*📚 Reading Commands:*
 /today - Get today's Bible reading
-/day [number] - Get reading for a specific day
+/day [number] - Get reading for a specific day (1-365)
   Example: /day 45
-
-/search [book] - Search for a Bible book
+/search [book] - Search for a Bible book in the reading plan
   Example: /search Genesis
   Example: /search Matthew
-  Example: /search Psalms
 
-/quiz - Start a fun Bible quiz! 🎯
-  Answer multiple choice questions and test your knowledge
-  Options: /quiz easy, /quiz medium, /quiz hard
-  Categories: /quiz old_testament, /quiz new_testament, /quiz bible_facts
-/ask [question] - Ask a Bible question and get an answer with Bible verses
-  Example: /ask How can I be saved?
-  Example: /ask What does the Bible say about love?
-/score - View your quiz statistics and best score
+*🎯 Quiz Commands:*
+/quiz - Start a random Bible quiz
+/quiz_easy - Start an easy quiz (all easy questions)
+/quiz_medium - Start a medium quiz (all medium questions)
+/quiz_hard - Start a hard quiz (all hard questions)
+/quiz [difficulty] [category] - Filtered quiz
+  Examples:
+  • /quiz easy old_testament
+  • /quiz hard new_testament
+  • /quiz medium bible_facts
+/score - View your quiz statistics and rank
+/leaderboard - See top 10 players (or /rankings)
 /quiz_stop - Stop your current quiz session
 
-*Queries:*
-You can also ask questions like:
+*❓ Q&A Commands:*
+/ask [question] - Ask a Bible question and get an answer
+  Examples:
+  • /ask How can I be saved?
+  • /ask What does the Bible say about love?
+  • /ask How should I pray?
+/question [question] - Same as /ask
+
+*💬 Natural Queries:*
+You can also ask naturally:
 • "What's today's reading?"
 • "Day 45"
 • "Show me day 100"
 
-*Daily Messages:*
+*📬 Daily Messages:*
 You'll automatically receive a message every day at 4:00 AM GMT with that day's reading.
+
+*📊 Reading Progress:*
+/progress - View your reading progress and completion percentage
+/streak - See your current reading streak
+/stats - Detailed reading statistics
+/completed [day] - Mark a specific day as completed
+💡 Viewing /today automatically marks today as completed!
+
+*📊 Quiz Features:*
+• 280+ questions covering all 66 books of the Bible
+• Difficulty levels: Easy, Medium, Hard
+• Categories: Old Testament, New Testament, Bible Facts
+• Leaderboard rankings based on best scores
+• Difficulty level maintained throughout quiz session
 
 *About:*
 This bot follows a complete Bible in a Year reading plan, combining Old Testament and New Testament readings each day."""
@@ -412,7 +444,7 @@ This bot follows a complete Bible in a Year reading plan, combining Old Testamen
         
         # Try to save to file, but also save in-memory as fallback
         try:
-            start_quiz_session(user_id, 0, question)
+            start_quiz_session(user_id, 0, question, difficulty=difficulty, category=category)
         except Exception as e:
             logger.error(f"Error starting quiz session in file for user {user_id}: {e}")
         
@@ -423,7 +455,9 @@ This bot follows a complete Bible in a Year reading plan, combining Old Testamen
             'question_data': question,
             'score': 0,
             'total': 0,
-            'started_at': None
+            'started_at': None,
+            'difficulty': difficulty,
+            'category': category
         }
         
         # Format question with options
@@ -471,7 +505,7 @@ Use /quiz_stop to end the quiz."""
         
         # Try to save to file, but also save in-memory as fallback
         try:
-            start_quiz_session(user_id, 0, question)
+            start_quiz_session(user_id, 0, question, difficulty="easy", category=None)
         except Exception as e:
             logger.error(f"Error starting quiz session in file for user {user_id}: {e}")
         
@@ -482,7 +516,9 @@ Use /quiz_stop to end the quiz."""
             'question_data': question,
             'score': 0,
             'total': 0,
-            'started_at': None
+            'started_at': None,
+            'difficulty': "easy",
+            'category': None
         }
         
         # Format question with options
@@ -525,7 +561,7 @@ Use /quiz_stop to end the quiz."""
         
         # Try to save to file, but also save in-memory as fallback
         try:
-            start_quiz_session(user_id, 0, question)
+            start_quiz_session(user_id, 0, question, difficulty="medium", category=None)
         except Exception as e:
             logger.error(f"Error starting quiz session in file for user {user_id}: {e}")
         
@@ -536,7 +572,9 @@ Use /quiz_stop to end the quiz."""
             'question_data': question,
             'score': 0,
             'total': 0,
-            'started_at': None
+            'started_at': None,
+            'difficulty': "medium",
+            'category': None
         }
         
         # Format question with options
@@ -579,7 +617,7 @@ Use /quiz_stop to end the quiz."""
         
         # Try to save to file, but also save in-memory as fallback
         try:
-            start_quiz_session(user_id, 0, question)
+            start_quiz_session(user_id, 0, question, difficulty="hard", category=None)
         except Exception as e:
             logger.error(f"Error starting quiz session in file for user {user_id}: {e}")
         
@@ -590,7 +628,9 @@ Use /quiz_stop to end the quiz."""
             'question_data': question,
             'score': 0,
             'total': 0,
-            'started_at': None
+            'started_at': None,
+            'difficulty': "hard",
+            'category': None
         }
         
         # Format question with options
@@ -927,16 +967,25 @@ Keep learning! Use /quiz to take another quiz."""
             # Automatically continue with another question
             await asyncio.sleep(1)  # Small delay before next question
             
-            # Get a new random question (keep same difficulty/category if possible)
-            new_question = get_random_question()
+            # Get difficulty and category from active quiz to maintain them
+            quiz_difficulty = active_quiz.get('difficulty')
+            quiz_category = active_quiz.get('category')
             
-            # Update the quiz session with new question while preserving score
+            # Get a new random question (keep same difficulty/category)
+            new_question = get_random_question(difficulty=quiz_difficulty, category=quiz_category)
+            
+            # Update the quiz session with new question while preserving score and filters
             user_id_str = str(user_id)
             try:
                 quizzes = load_active_quizzes()
                 if user_id_str in quizzes:
                     quizzes[user_id_str]['question_data'] = new_question
                     quizzes[user_id_str]['question_index'] = 0
+                    # Preserve difficulty and category
+                    if quiz_difficulty:
+                        quizzes[user_id_str]['difficulty'] = quiz_difficulty
+                    if quiz_category:
+                        quizzes[user_id_str]['category'] = quiz_category
                     # Keep the existing score and total
                     if not save_active_quizzes(quizzes):
                         logger.warning(f"Failed to save active quiz to file for user {user_id}, using in-memory")
@@ -947,7 +996,9 @@ Keep learning! Use /quiz to take another quiz."""
                             'question_data': new_question,
                             'question_index': 0,
                             'score': new_score,
-                            'total': new_total
+                            'total': new_total,
+                            'difficulty': quiz_difficulty,
+                            'category': quiz_category
                         })
                 else:
                     # Session was lost, create a new one
@@ -958,7 +1009,9 @@ Keep learning! Use /quiz to take another quiz."""
                         'question_data': new_question,
                         'question_index': 0,
                         'score': new_score,
-                        'total': new_total
+                        'total': new_total,
+                        'difficulty': quiz_difficulty,
+                        'category': quiz_category
                     })
             except Exception as e:
                 logger.error(f"Error updating quiz session with new question for user {user_id}: {e}")
@@ -969,7 +1022,9 @@ Keep learning! Use /quiz to take another quiz."""
                     'question_data': new_question,
                     'question_index': 0,
                     'score': new_score,
-                    'total': new_total
+                    'total': new_total,
+                    'difficulty': quiz_difficulty,
+                    'category': quiz_category
                 })
             
             # Format new question with options
@@ -1112,6 +1167,183 @@ Use /quiz_stop to end the quiz."""
             await update.message.reply_text(
                 f"❌ Error testing daily messages:\n{str(e)}"
             )
+    
+    async def progress_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /progress command - show reading progress"""
+        user_id = update.effective_user.id
+        self._ensure_subscribed(user_id)
+        
+        progress = get_user_progress(user_id)
+        current_streak = get_current_streak(user_id)
+        longest_streak = get_longest_streak(user_id)
+        current_day, _ = self.get_day_of_year()
+        
+        # Calculate days remaining
+        total_days = 365
+        current_year = datetime.now().year
+        if current_year % 4 == 0 and (current_year % 100 != 0 or current_year % 400 == 0):
+            total_days = 366
+        
+        days_remaining = total_days - current_day
+        days_completed = progress['total_completed']
+        
+        # Create progress bar (visual representation)
+        progress_bar_length = 20
+        filled = int((progress['completion_percentage'] / 100) * progress_bar_length)
+        progress_bar = "█" * filled + "░" * (progress_bar_length - filled)
+        
+        progress_text = f"""📊 *Your Reading Progress*
+
+📖 *Completion:* {days_completed}/{total_days} days ({progress['completion_percentage']:.1f}%)
+{progress_bar}
+
+🔥 *Current Streak:* {current_streak} days
+🏆 *Longest Streak:* {longest_streak} days
+
+📅 *Today:* Day {current_day}
+⏳ *Days Remaining:* {days_remaining}
+
+💡 *Tip:* Use /today to read today's passage and automatically mark it as completed!
+
+*Commands:*
+• /streak - View your reading streak
+• /stats - Detailed statistics
+• /completed [day] - Mark a specific day as completed"""
+        
+        await update.message.reply_text(progress_text, parse_mode='Markdown')
+    
+    async def streak_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /streak command - show reading streak"""
+        user_id = update.effective_user.id
+        self._ensure_subscribed(user_id)
+        
+        current_streak = get_current_streak(user_id)
+        longest_streak = get_longest_streak(user_id)
+        progress = get_user_progress(user_id)
+        current_day, _ = self.get_day_of_year()
+        
+        # Check if today is completed
+        today_completed = is_day_completed(user_id, current_day)
+        
+        streak_text = f"""🔥 *Your Reading Streak*
+
+📅 *Current Streak:* {current_streak} days
+🏆 *Longest Streak This Year:* {longest_streak} days
+
+{"✅ Today's reading is completed!" if today_completed else "⚠️ Don't forget to read today! Use /today"}
+        
+💪 *Keep it up!* Consistency is key to completing the Bible in a Year.
+
+*Commands:*
+• /progress - Full progress overview
+• /stats - Detailed statistics
+• /today - Read today's passage"""
+        
+        await update.message.reply_text(streak_text, parse_mode='Markdown')
+    
+    async def completed_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /completed command - mark days as completed"""
+        user_id = update.effective_user.id
+        self._ensure_subscribed(user_id)
+        
+        if not context.args:
+            # Show help
+            await update.message.reply_text(
+                "📝 *Mark Days as Completed*\n\n"
+                "Usage: /completed [day number]\n\n"
+                "Examples:\n"
+                "• /completed 45 - Mark day 45 as completed\n"
+                "• /completed 100 - Mark day 100 as completed\n\n"
+                "💡 *Note:* Viewing /today automatically marks today as completed!\n\n"
+                "Use /progress to see your completion status."
+            )
+            return
+        
+        try:
+            day_number = int(context.args[0])
+            if day_number < 1 or day_number > 365:
+                await update.message.reply_text(
+                    "Please enter a day number between 1 and 365."
+                )
+                return
+            
+            # Mark as completed
+            if mark_day_completed(user_id, day_number):
+                is_already = is_day_completed(user_id, day_number)
+                if is_already:
+                    await update.message.reply_text(
+                        f"✅ Day {day_number} is already marked as completed!\n\n"
+                        f"Use /progress to see your full reading progress."
+                    )
+                else:
+                    await update.message.reply_text(
+                        f"✅ Day {day_number} marked as completed!\n\n"
+                        f"Use /progress to see your updated reading progress."
+                    )
+            else:
+                await update.message.reply_text(
+                    "❌ Error marking day as completed. Please try again."
+                )
+        except ValueError:
+            await update.message.reply_text(
+                "Please enter a valid day number (1-365).\n"
+                "Example: /completed 45"
+            )
+    
+    async def stats_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /stats command - show detailed reading statistics"""
+        user_id = update.effective_user.id
+        self._ensure_subscribed(user_id)
+        
+        progress = get_user_progress(user_id)
+        current_streak = get_current_streak(user_id)
+        longest_streak = get_longest_streak(user_id)
+        current_day, date_str = self.get_day_of_year()
+        
+        # Calculate statistics
+        total_days = 365
+        current_year = datetime.now().year
+        if current_year % 4 == 0 and (current_year % 100 != 0 or current_year % 400 == 0):
+            total_days = 366
+        
+        days_remaining = total_days - current_day
+        days_completed = progress['total_completed']
+        completion_rate = (days_completed / current_day * 100) if current_day > 0 else 0
+        
+        # Find last completed day
+        last_completed = progress.get('last_completed', 'None')
+        if last_completed:
+            last_completed_text = f"Day {last_completed}"
+        else:
+            last_completed_text = "No days completed yet"
+        
+        stats_text = f"""📊 *Detailed Reading Statistics*
+
+📖 *Overall Progress:*
+• Days Completed: {days_completed}/{total_days}
+• Completion: {progress['completion_percentage']:.1f}%
+• Days Remaining: {days_remaining}
+
+🔥 *Streaks:*
+• Current Streak: {current_streak} days
+• Longest Streak: {longest_streak} days
+
+📅 *Current Status:*
+• Today: Day {current_day} ({date_str})
+• Last Completed: {last_completed_text}
+• Completion Rate: {completion_rate:.1f}% (of days so far)
+
+💡 *Tips:*
+• Read every day to maintain your streak!
+• Use /today to automatically mark today as completed
+• Use /progress for a visual progress bar
+
+*Commands:*
+• /progress - Visual progress overview
+• /streak - Streak information
+• /completed [day] - Mark a day as completed"""
+        
+        await update.message.reply_text(stats_text, parse_mode='Markdown')
     
     def run(self):
         """Start the bot"""
