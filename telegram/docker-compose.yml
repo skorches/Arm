@@ -13,6 +13,12 @@ services:
       - ./active_quizzes.json:/app/active_quizzes.json
       # Persist reading progress
       - ./reading_progress.json:/app/reading_progress.json
+      # Persist daily quiz data
+      - ./daily_quiz.json:/app/daily_quiz.json
+      # Persist achievements
+      - ./achievements.json:/app/achievements.json
+      # Persist reminders
+      - ./reminders.json:/app/reminders.json
     environment:
       - TZ=GMT
       # Bot token can be set here or in .env file

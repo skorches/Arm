@@ -31,6 +31,10 @@ from reading_progress import (
     mark_day_completed, get_user_progress, get_current_streak,
     get_longest_streak, is_day_completed
 )
+from daily_quiz import (
+    get_today_quiz_question, mark_daily_quiz_completed,
+    has_completed_daily_quiz, get_daily_quiz_stats, get_daily_quiz_leaderboard
+)
 
 # Load environment variables
 load_dotenv()
@@ -75,6 +79,13 @@ class BibleVerseBot:
         self.application.add_handler(CommandHandler("completed", self.completed_command))
         self.application.add_handler(CommandHandler("stats", self.stats_command))
         self.application.add_handler(CommandHandler("menu", self.menu_command))
+        self.application.add_handler(CommandHandler("daily_quiz", self.daily_quiz_command))
+        self.application.add_handler(CommandHandler("challenge", self.daily_quiz_command))
+        self.application.add_handler(CommandHandler("verse", self.verse_command))
+        self.application.add_handler(CommandHandler("achievements", self.achievements_command))
+        self.application.add_handler(CommandHandler("badges", self.achievements_command))
+        self.application.add_handler(CommandHandler("remind", self.remind_command))
+        self.application.add_handler(CommandHandler("remind_off", self.remind_off_command))
         
         # Callback query handler for inline buttons
         self.application.add_handler(CallbackQueryHandler(self.handle_callback))
@@ -171,7 +182,7 @@ class BibleVerseBot:
             [KeyboardButton("📈 Leaderboard"), KeyboardButton("🔥 My Streak")],
             [KeyboardButton("📚 Search"), KeyboardButton("ℹ️ Help")]
         ]
-        return ReplyKeyboardMarkup(keyboard, resize_keyboard=True, persistent=True)
+        return ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
     
     def get_quiz_reply_keyboard(self):
         """Create quiz difficulty reply keyboard"""
@@ -181,17 +192,16 @@ class BibleVerseBot:
             [KeyboardButton("📊 My Score"), KeyboardButton("🏆 Leaderboard")],
             [KeyboardButton("🔙 Main Menu")]
         ]
-        return ReplyKeyboardMarkup(keyboard, resize_keyboard=True, persistent=True)
+        return ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
     
     def get_quiz_answer_keyboard(self, question_data):
-        """Create keyboard with quiz answer options as buttons"""
+        """Create inline keyboard with quiz answer options as buttons"""
         options = question_data['options']
-        keyboard = [
-            [KeyboardButton(f"1️⃣ {options[0]}"), KeyboardButton(f"2️⃣ {options[1]}")],
-            [KeyboardButton(f"3️⃣ {options[2]}"), KeyboardButton(f"4️⃣ {options[3]}")],
-            [KeyboardButton("⏹️ Stop Quiz")]
-        ]
-        return ReplyKeyboardMarkup(keyboard, resize_keyboard=True, persistent=True)
+        keyboard = []
+        for i, option in enumerate(options):
+            keyboard.append([InlineKeyboardButton(f"{i+1}. {option}", callback_data=f"quiz_answer_{i}")])
+        keyboard.append([InlineKeyboardButton("⏹️ Stop Quiz", callback_data="quiz_stop")])
+        return InlineKeyboardMarkup(keyboard)
     
     async def start_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle /start command"""
@@ -221,7 +231,7 @@ Just tap the buttons below to:
             await update.message.reply_text(
                 welcome_message, 
                 parse_mode='Markdown',
-                reply_markup=self.get_main_reply_keyboard()
+                reply_markup=self.get_main_menu_keyboard()
             )
             logger.info(f"User {user.id} ({user.username}) started the bot")
         except Forbidden:
@@ -240,7 +250,7 @@ Just tap the buttons below to:
                 await update.message.reply_text(
                     message, 
                     parse_mode='Markdown',
-                    reply_markup=self.get_main_reply_keyboard()
+                    reply_markup=self.get_quick_actions_keyboard()
                 )
                 logger.info(f"Sent today's reading to new user {user_id}")
             except Forbidden:
@@ -251,7 +261,7 @@ Just tap the buttons below to:
                 logger.error(f"Error sending today's reading to new user {user_id}: {e}")
     
     def get_main_menu_keyboard(self):
-        """Create main menu inline keyboard"""
+        """Create comprehensive main menu inline keyboard"""
         keyboard = [
             [
                 InlineKeyboardButton("📖 Today's Reading", callback_data="menu_today"),
@@ -259,40 +269,53 @@ Just tap the buttons below to:
             ],
             [
                 InlineKeyboardButton("🎯 Start Quiz", callback_data="menu_quiz"),
-                InlineKeyboardButton("❓ Ask Question", callback_data="menu_ask")
+                InlineKeyboardButton("⭐ Daily Challenge", callback_data="menu_daily_quiz")
+            ],
+            [
+                InlineKeyboardButton("📖 Verse of Day", callback_data="menu_verse"),
+                InlineKeyboardButton("🏆 Achievements", callback_data="menu_achievements")
             ],
             [
                 InlineKeyboardButton("📈 Leaderboard", callback_data="menu_leaderboard"),
                 InlineKeyboardButton("🔥 My Streak", callback_data="menu_streak")
             ],
             [
-                InlineKeyboardButton("📚 Search Reading", callback_data="menu_search"),
+                InlineKeyboardButton("❓ Ask Question", callback_data="menu_ask"),
+                InlineKeyboardButton("📚 Search", callback_data="menu_search")
+            ],
+            [
+                InlineKeyboardButton("⏰ Reminders", callback_data="menu_reminders"),
                 InlineKeyboardButton("ℹ️ Help", callback_data="menu_help")
             ]
         ]
         return InlineKeyboardMarkup(keyboard)
     
     def get_quiz_menu_keyboard(self):
-        """Create quiz difficulty selection keyboard"""
+        """Create enhanced quiz difficulty selection keyboard"""
         keyboard = [
             [
-                InlineKeyboardButton("🟢 Easy", callback_data="quiz_easy"),
-                InlineKeyboardButton("🟡 Medium", callback_data="quiz_medium"),
-                InlineKeyboardButton("🔴 Hard", callback_data="quiz_hard")
+                InlineKeyboardButton("🟢 Easy Quiz", callback_data="quiz_easy"),
+                InlineKeyboardButton("🟡 Medium Quiz", callback_data="quiz_medium")
             ],
             [
-                InlineKeyboardButton("🎲 Random", callback_data="quiz_random"),
-                InlineKeyboardButton("📊 My Score", callback_data="menu_score")
+                InlineKeyboardButton("🔴 Hard Quiz", callback_data="quiz_hard"),
+                InlineKeyboardButton("🎲 Random Quiz", callback_data="quiz_random")
             ],
             [
-                InlineKeyboardButton("🏆 Leaderboard", callback_data="menu_leaderboard"),
+                InlineKeyboardButton("⭐ Daily Challenge", callback_data="menu_daily_quiz")
+            ],
+            [
+                InlineKeyboardButton("📊 My Score", callback_data="menu_score"),
+                InlineKeyboardButton("🏆 Leaderboard", callback_data="menu_leaderboard")
+            ],
+            [
                 InlineKeyboardButton("🔙 Main Menu", callback_data="menu_main")
             ]
         ]
         return InlineKeyboardMarkup(keyboard)
     
     def get_reading_menu_keyboard(self):
-        """Create reading menu keyboard"""
+        """Create enhanced reading menu keyboard"""
         keyboard = [
             [
                 InlineKeyboardButton("📖 Today", callback_data="reading_today"),
@@ -303,20 +326,56 @@ Just tap the buttons below to:
                 InlineKeyboardButton("🔥 Streak", callback_data="menu_streak")
             ],
             [
-                InlineKeyboardButton("📚 Search", callback_data="menu_search"),
+                InlineKeyboardButton("📈 Stats", callback_data="menu_stats"),
+                InlineKeyboardButton("📚 Search", callback_data="menu_search")
+            ],
+            [
+                InlineKeyboardButton("🔙 Main Menu", callback_data="menu_main")
+            ]
+        ]
+        return InlineKeyboardMarkup(keyboard)
+    
+    def get_quick_actions_keyboard(self):
+        """Create quick action buttons for common commands"""
+        keyboard = [
+            [
+                InlineKeyboardButton("📖 Today", callback_data="menu_today"),
+                InlineKeyboardButton("🎯 Quiz", callback_data="menu_quiz"),
+                InlineKeyboardButton("📊 Progress", callback_data="menu_progress")
+            ],
+            [
+                InlineKeyboardButton("⭐ Challenge", callback_data="menu_daily_quiz"),
+                InlineKeyboardButton("📖 Verse", callback_data="menu_verse"),
+                InlineKeyboardButton("🏆 Badges", callback_data="menu_achievements")
+            ],
+            [
+                InlineKeyboardButton("📈 Leaderboard", callback_data="menu_leaderboard"),
                 InlineKeyboardButton("🔙 Main Menu", callback_data="menu_main")
             ]
         ]
         return InlineKeyboardMarkup(keyboard)
     
     async def menu_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Handle /menu command - show main menu"""
+        """Handle /menu command - show enhanced main menu"""
         user_id = update.effective_user.id
         self._ensure_subscribed(user_id)
         
-        menu_text = """📱 *Main Menu*
+        # Get user stats for personalized menu
+        progress = get_user_progress(user_id)
+        current_streak = get_current_streak(user_id)
+        score = get_user_score(user_id)
+        
+        menu_text = f"""📱 *Main Menu*
 
-Choose an option below:"""
+👋 Welcome! Choose an option below:
+
+📊 *Quick Stats:*
+• Reading: {progress['total_completed']} days completed
+• Streak: {current_streak} days 🔥
+• Quiz Score: {score.get('total_correct', 0)} correct answers
+
+━━━━━━━━━━━━━━━━━━━━
+*Tap a button to get started!* 👇"""
         
         await update.message.reply_text(
             menu_text,
@@ -331,58 +390,58 @@ Choose an option below:"""
         
         help_text = """📖 *Bible in a Year Bot - Help*
 
+*🎯 Main Features:*
+Everything is button-based! Just tap the buttons below to interact.
+
 *📚 Reading Commands:*
 /today - Get today's Bible reading
 /day [number] - Get reading for a specific day (1-365)
-  Example: /day 45
 /search [book] - Search for a Bible book in the reading plan
-  Example: /search Genesis
-  Example: /search Matthew
 
 *🎯 Quiz Commands:*
 /quiz - Start a random Bible quiz
-/quiz_easy - Start an easy quiz (all easy questions)
-/quiz_medium - Start a medium quiz (all medium questions)
-/quiz_hard - Start a hard quiz (all hard questions)
-/quiz [difficulty] [category] - Filtered quiz
-  Examples:
-  • /quiz easy old_testament
-  • /quiz hard new_testament
-  • /quiz medium bible_facts
+/quiz_easy - Start an easy quiz
+/quiz_medium - Start a medium quiz
+/quiz_hard - Start a hard quiz
+/daily_quiz or /challenge - Take today's special daily challenge quiz
 /score - View your quiz statistics and rank
-/leaderboard - See top 10 players (or /rankings)
+/leaderboard - See top 10 players
 /quiz_stop - Stop your current quiz session
+
+*⭐ New Features:*
+/daily_quiz - Take today's special quiz challenge (one per day)
+/verse - Get today's inspiring Bible verse
+/verse [reference] - Get a specific verse (e.g., /verse John 3:16)
+/achievements or /badges - View your unlocked achievements
+/remind [time] - Set reading reminders (e.g., /remind 8am)
+/remind_off - Disable reading reminders
 
 *❓ Q&A Commands:*
 /ask [question] - Ask a Bible question and get an answer
-  Examples:
-  • /ask How can I be saved?
-  • /ask What does the Bible say about love?
-  • /ask How should I pray?
 /question [question] - Same as /ask
 
-*💬 Natural Queries:*
-You can also ask naturally:
-• "What's today's reading?"
-• "Day 45"
-• "Show me day 100"
-
-*📬 Daily Messages:*
-You'll automatically receive a message every day at 4:00 AM GMT with that day's reading.
-
 *📊 Reading Progress:*
-/progress - View your reading progress and completion percentage
+/progress - View your reading progress
 /streak - See your current reading streak
 /stats - Detailed reading statistics
 /completed [day] - Mark a specific day as completed
-💡 Viewing /today automatically marks today as completed!
 
 *📊 Quiz Features:*
 • 280+ questions covering all 66 books of the Bible
 • Difficulty levels: Easy, Medium, Hard
-• Categories: Old Testament, New Testament, Bible Facts
+• Daily Challenge Quiz - one special quiz per day
 • Leaderboard rankings based on best scores
-• Difficulty level maintained throughout quiz session
+• Achievement badges for milestones
+
+*🏆 Achievements:*
+Unlock badges by:
+• Completing readings
+• Maintaining streaks
+• Answering quiz questions
+• Completing daily challenges
+
+*📬 Daily Messages:*
+You'll automatically receive a message every day at 4:00 AM GMT with that day's reading.
 
 *About:*
 This bot follows a complete Bible in a Year reading plan, combining Old Testament and New Testament readings each day."""
@@ -898,8 +957,20 @@ Keep learning! Use /quiz to take another quiz."""
         """Handle /quiz_stop command - stop current quiz"""
         user_id = update.effective_user.id
         
-        session = end_quiz_session(user_id)
+        # Check in-memory first
+        session = None
+        if str(user_id) in self._in_memory_quizzes:
+            session = self._in_memory_quizzes[str(user_id)]
+            del self._in_memory_quizzes[str(user_id)]
+        
+        # Also check file-based storage
+        if not session:
+            session = end_quiz_session(user_id)
+        
         if session:
+            # Check if this was a daily quiz
+            is_daily_quiz = session.get('is_daily_quiz', False)
+            
             # Save the quiz results
             if session['total'] > 0:
                 user = update.effective_user
@@ -911,13 +982,38 @@ Keep learning! Use /quiz to take another quiz."""
                     first_name=user.first_name
                 )
                 accuracy = (session['score'] / session['total']) * 100
-                await update.message.reply_text(
-                    f"✅ *Quiz Ended*\n\n"
-                    f"Final Score: {session['score']}/{session['total']} ({accuracy:.1f}%)\n\n"
-                    f"Tap '🎯 Start Quiz' to start a new quiz!",
-                    parse_mode='Markdown',
-                    reply_markup=self.get_main_reply_keyboard()
-                )
+                
+                # Mark daily quiz as completed if applicable
+                if is_daily_quiz:
+                    mark_daily_quiz_completed(user_id, session['score'], session['total'])
+                    # Check for achievements
+                    newly_unlocked = check_and_award_achievements(user_id)
+                    
+                    message = f"✅ *Daily Challenge Completed!*\n\n"
+                    message += f"Final Score: {session['score']}/{session['total']} ({accuracy:.1f}%)\n\n"
+                    
+                    if newly_unlocked:
+                        message += "🎉 *New Achievement Unlocked!*\n\n"
+                        for achievement_id in newly_unlocked:
+                            achievement = ACHIEVEMENTS[achievement_id]
+                            message += f"{achievement['emoji']} {achievement['name']}\n"
+                        message += "\n"
+                    
+                    message += "Come back tomorrow for a new challenge!"
+                    
+                    await update.message.reply_text(
+                        message,
+                        parse_mode='Markdown',
+                        reply_markup=self.get_main_reply_keyboard()
+                    )
+                else:
+                    await update.message.reply_text(
+                        f"✅ *Quiz Ended*\n\n"
+                        f"Final Score: {session['score']}/{session['total']} ({accuracy:.1f}%)\n\n"
+                        f"Tap '🎯 Start Quiz' to start a new quiz!",
+                        parse_mode='Markdown',
+                        reply_markup=self.get_main_reply_keyboard()
+                    )
             else:
                 await update.message.reply_text(
                     "✅ Quiz session ended.\n\n"
@@ -1244,7 +1340,47 @@ Choose your difficulty level:
             
             logger.info(f"User {user_id} answered quiz question: {'correct' if is_correct else 'incorrect'}")
             
-            # Automatically continue with another question
+            # Check if this is a daily quiz (only one question)
+            is_daily_quiz = active_quiz.get('is_daily_quiz', False)
+            
+            if is_daily_quiz:
+                # Daily quiz is complete after one question
+                # Mark as completed
+                mark_daily_quiz_completed(user_id, new_score, new_total)
+                
+                # End the quiz session
+                try:
+                    end_quiz_session(user_id)
+                except Exception as e:
+                    logger.error(f"Error ending daily quiz session: {e}")
+                
+                if str(user_id) in self._in_memory_quizzes:
+                    del self._in_memory_quizzes[str(user_id)]
+                
+                # Check for achievements
+                newly_unlocked = check_and_award_achievements(user_id)
+                
+                completion_msg = f"✅ *Daily Challenge Completed!*\n\n"
+                accuracy = (new_score / new_total * 100) if new_total > 0 else 0
+                completion_msg += f"Final Score: {new_score}/{new_total} ({accuracy:.1f}%)\n\n"
+                
+                if newly_unlocked:
+                    completion_msg += "🎉 *New Achievement Unlocked!*\n\n"
+                    for achievement_id in newly_unlocked:
+                        achievement = ACHIEVEMENTS[achievement_id]
+                        completion_msg += f"{achievement['emoji']} {achievement['name']}\n"
+                    completion_msg += "\n"
+                
+                completion_msg += "Come back tomorrow for a new challenge!"
+                
+                await update.message.reply_text(
+                    completion_msg,
+                    parse_mode='Markdown',
+                    reply_markup=self.get_main_reply_keyboard()
+                )
+                return
+            
+            # Automatically continue with another question (for regular quizzes)
             await asyncio.sleep(1)  # Small delay before next question
             
             # Get difficulty and category from active quiz to maintain them
@@ -1627,10 +1763,16 @@ Use /quiz_stop to end the quiz."""
 • /streak - Streak information
 • /completed [day] - Mark a day as completed"""
         
+        keyboard = [
+            [InlineKeyboardButton("📊 Progress", callback_data="menu_progress")],
+            [InlineKeyboardButton("🔥 Streak", callback_data="menu_streak")],
+            [InlineKeyboardButton("🔙 Main Menu", callback_data="menu_main")]
+        ]
+        
         await update.message.reply_text(
             stats_text, 
             parse_mode='Markdown',
-            reply_markup=self.get_main_reply_keyboard()
+            reply_markup=InlineKeyboardMarkup(keyboard)
         )
     
     async def handle_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -1790,25 +1932,649 @@ Choose your difficulty level:
                 diff_name = difficulty.title() if difficulty else "Random"
                 quiz_message = f"""🎯 <b>{diff_name} Bible Quiz Started!</b>
 
+━━━━━━━━━━━━━━━━━━━━
+
 <b>Question:</b>
 {question['question']}
 
-<b>Options:</b>
-{options_text}
-Reply with the <b>number</b> (1-4) of your answer."""
+━━━━━━━━━━━━━━━━━━━━
+
+<b>Tap your answer below:</b>"""
                 
-                await query.edit_message_text(quiz_message, parse_mode='HTML')
+                await query.edit_message_text(
+                    quiz_message, 
+                    parse_mode='HTML',
+                    reply_markup=self.get_quiz_answer_keyboard(question)
+                )
+            
+            elif callback_data == "menu_daily_quiz":
+                # Check if already completed
+                if has_completed_daily_quiz(user_id):
+                    stats = get_daily_quiz_stats(user_id)
+                    await query.edit_message_text(
+                        f"✅ *Daily Challenge Completed!*\n\n"
+                        f"You've already completed today's challenge!\n\n"
+                        f"*Your Daily Challenge Stats:*\n"
+                        f"• Total Completed: {stats['total_completed']}\n"
+                        f"• Current Streak: {stats['current_streak']} days\n"
+                        f"• Best Score: {stats['best_score']:.1f}%\n\n"
+                        f"Come back tomorrow for a new challenge!",
+                        parse_mode='Markdown',
+                        reply_markup=self.get_quick_actions_keyboard()
+                    )
+                    return
+                
+                # Get today's question
+                question = get_today_quiz_question()
+                
+                # Check if user has active quiz
+                active_quiz = get_quiz_session(user_id)
+                if active_quiz:
+                    await query.edit_message_text(
+                        "🎯 *You already have an active quiz!*\n\n"
+                        f"Current score: {active_quiz['score']}/{active_quiz['total']}\n\n"
+                        "Complete or stop your current quiz first.",
+                        parse_mode='Markdown',
+                        reply_markup=self.get_quick_actions_keyboard()
+                    )
+                    return
+                
+                # Start daily quiz session
+                try:
+                    start_quiz_session(user_id, 0, question, difficulty=question.get('difficulty'), category=question.get('category'))
+                except Exception as e:
+                    logger.error(f"Error starting daily quiz session: {e}")
+                
+                user_id_str = str(user_id)
+                self._in_memory_quizzes[user_id_str] = {
+                    'question_index': 0,
+                    'question_data': question,
+                    'score': 0,
+                    'total': 0,
+                    'started_at': None,
+                    'difficulty': question.get('difficulty'),
+                    'category': question.get('category'),
+                    'is_daily_quiz': True
+                }
+                
+                quiz_message = f"""⭐ <b>Daily Challenge Quiz!</b>
+
+━━━━━━━━━━━━━━━━━━━━
+
+🎯 <b>Today's Special Question:</b>
+{question['question']}
+
+━━━━━━━━━━━━━━━━━━━━
+
+<b>Tap your answer below:</b>
+
+💡 <i>Complete today's challenge to earn points and maintain your streak!</i>"""
+                
+                await query.edit_message_text(
+                    quiz_message,
+                    parse_mode='HTML',
+                    reply_markup=self.get_quiz_answer_keyboard(question)
+                )
+            
+            elif callback_data == "menu_verse":
+                verse_data = get_verse_of_the_day()
+                verse_text = f"""📖 <b>Verse of the Day</b>
+
+━━━━━━━━━━━━━━━━━━━━
+
+<b>{verse_data['reference']}</b>
+
+{verse_data['verse']}
+
+━━━━━━━━━━━━━━━━━━━━
+
+💡 <i>Topic: {verse_data['topic']}</i>
+
+*Use /verse [reference] to get a specific verse*
+*Example: /verse John 3:16*"""
+                
+                keyboard = [
+                    [InlineKeyboardButton("📖 Another Verse", callback_data="menu_verse")],
+                    [InlineKeyboardButton("🔙 Main Menu", callback_data="menu_main")]
+                ]
+                
+                await query.edit_message_text(
+                    verse_text,
+                    parse_mode='HTML',
+                    reply_markup=InlineKeyboardMarkup(keyboard)
+                )
+            
+            elif callback_data == "menu_achievements":
+                # Check for new achievements
+                from reading_progress import get_user_progress
+                from quiz_storage import get_user_score
+                from daily_quiz import get_daily_quiz_stats
+                
+                reading_progress = get_user_progress(user_id)
+                quiz_stats = get_user_score(user_id)
+                daily_quiz_stats = get_daily_quiz_stats(user_id)
+                
+                newly_unlocked = check_and_award_achievements(
+                    user_id, reading_progress, quiz_stats, daily_quiz_stats
+                )
+                
+                display = get_achievement_display(user_id)
+                
+                # Show notification if new achievements unlocked
+                if newly_unlocked:
+                    notification = "🎉 *New Achievement Unlocked!*\n\n"
+                    for achievement_id in newly_unlocked:
+                        achievement = ACHIEVEMENTS[achievement_id]
+                        notification += f"{achievement['emoji']} *{achievement['name']}*\n"
+                        notification += f"   {achievement['description']}\n\n"
+                    notification += "━━━━━━━━━━━━━━━━━━━━\n\n"
+                    display = notification + display
+                
+                keyboard = [
+                    [InlineKeyboardButton("🔙 Main Menu", callback_data="menu_main")]
+                ]
+                
+                await query.edit_message_text(
+                    display,
+                    parse_mode='Markdown',
+                    reply_markup=InlineKeyboardMarkup(keyboard)
+                )
+            
+            elif callback_data == "menu_reminders":
+                reminders = get_user_reminders(user_id)
+                if reminders['enabled'] and reminders['times']:
+                    times_list = "\n".join([f"• {time}" for time in reminders['times']])
+                    reminder_text = f"""⏰ *Your Reading Reminders*
+
+━━━━━━━━━━━━━━━━━━━━
+
+*Reminder Times:*
+{times_list}
+
+━━━━━━━━━━━━━━━━━━━━
+
+*To add a reminder:*
+/remind 8am
+/remind 14:30
+/remind 9:00pm
+
+*To remove a reminder:*
+/remind_off"""
+                else:
+                    reminder_text = """⏰ *Reading Reminders*
+
+━━━━━━━━━━━━━━━━━━━━
+
+You don't have any reminders set.
+
+*Set a reminder:*
+/remind 8am
+/remind 14:30
+/remind 9:00pm
+
+*Examples:*
+• /remind 8am - Remind at 8:00 AM
+• /remind 14:30 - Remind at 2:30 PM
+• /remind 9:00pm - Remind at 9:00 PM"""
+                
+                keyboard = [
+                    [InlineKeyboardButton("🔙 Main Menu", callback_data="menu_main")]
+                ]
+                
+                await query.edit_message_text(
+                    reminder_text,
+                    parse_mode='Markdown',
+                    reply_markup=InlineKeyboardMarkup(keyboard)
+                )
+            
+            elif callback_data == "menu_leaderboard":
+                leaderboard = get_leaderboard(limit=10)
+                user_rank, total_players = get_user_rank(user_id)
+                
+                if not leaderboard:
+                    leaderboard_text = "📈 *Leaderboard*\n\nNo players yet. Be the first!"
+                else:
+                    leaderboard_text = "📈 *Top 10 Players*\n\n"
+                    leaderboard_text += "━━━━━━━━━━━━━━━━━━━━\n\n"
+                    
+                    medals = ["🥇", "🥈", "🥉"]
+                    for i, player in enumerate(leaderboard):
+                        medal = medals[i] if i < 3 else f"{i+1}."
+                        name = player.get('first_name') or player.get('username') or f"User {player['user_id']}"
+                        best_score = player.get('best_score', 0)
+                        total_correct = player.get('total_correct', 0)
+                        leaderboard_text += f"{medal} {name}\n"
+                        leaderboard_text += f"   Best: {best_score:.1f}% | Correct: {total_correct}\n\n"
+                    
+                    leaderboard_text += "━━━━━━━━━━━━━━━━━━━━\n\n"
+                    if user_rank:
+                        leaderboard_text += f"*Your Rank:* #{user_rank} of {total_players} players"
+                    else:
+                        leaderboard_text += f"*Total Players:* {total_players}"
+                
+                keyboard = [
+                    [InlineKeyboardButton("📊 My Score", callback_data="menu_score")],
+                    [InlineKeyboardButton("🔙 Main Menu", callback_data="menu_main")]
+                ]
+                
+                await query.edit_message_text(
+                    leaderboard_text,
+                    parse_mode='Markdown',
+                    reply_markup=InlineKeyboardMarkup(keyboard)
+                )
+            
+            elif callback_data == "menu_score":
+                score = get_user_score(user_id)
+                rank, total_players = get_user_rank(user_id)
+                
+                if score['total_answered'] == 0:
+                    score_text = """📊 *Your Quiz Score*
+
+━━━━━━━━━━━━━━━━━━━━
+
+You haven't answered any questions yet!
+
+*Start a quiz to begin earning points:*
+• Tap '🎯 Start Quiz' to begin
+• Complete daily challenges
+• Climb the leaderboard!"""
+                else:
+                    accuracy = (score['total_correct'] / score['total_answered'] * 100) if score['total_answered'] > 0 else 0
+                    rank_text = f"#{rank} of {total_players}" if rank else "Not ranked"
+                    
+                    score_text = f"""📊 *Your Quiz Statistics*
+
+━━━━━━━━━━━━━━━━━━━━
+
+🎯 *Performance:*
+• Total Answered: {score['total_answered']}
+• Correct Answers: {score['total_correct']}
+• Accuracy: {accuracy:.1f}%
+• Best Score: {score.get('best_score', 0):.1f}%
+• Quizzes Completed: {score.get('quizzes_completed', 0)}
+
+━━━━━━━━━━━━━━━━━━━━
+
+🏆 *Ranking:*
+• Your Rank: {rank_text}
+
+━━━━━━━━━━━━━━━━━━━━
+
+💪 *Keep practicing to improve your score!*"""
+                
+                keyboard = [
+                    [InlineKeyboardButton("🎯 Start Quiz", callback_data="menu_quiz")],
+                    [InlineKeyboardButton("📈 Leaderboard", callback_data="menu_leaderboard")],
+                    [InlineKeyboardButton("🔙 Main Menu", callback_data="menu_main")]
+                ]
+                
+                await query.edit_message_text(
+                    score_text,
+                    parse_mode='Markdown',
+                    reply_markup=InlineKeyboardMarkup(keyboard)
+                )
+            
+            elif callback_data == "menu_stats":
+                progress = get_user_progress(user_id)
+                current_streak = get_current_streak(user_id)
+                longest_streak = get_longest_streak(user_id)
+                current_day, date_str = self.get_day_of_year()
+                
+                total_days = 365
+                current_year = datetime.now().year
+                if current_year % 4 == 0 and (current_year % 100 != 0 or current_year % 400 == 0):
+                    total_days = 366
+                
+                days_completed = progress['total_completed']
+                days_remaining = total_days - current_day
+                completion_rate = (days_completed / current_day * 100) if current_day > 0 else 0
+                
+                stats_text = f"""📊 *Detailed Reading Statistics*
+
+━━━━━━━━━━━━━━━━━━━━
+
+📖 *Overall Progress:*
+• Days Completed: {days_completed}/{total_days}
+• Completion: {progress['completion_percentage']:.1f}%
+• Days Remaining: {days_remaining}
+
+━━━━━━━━━━━━━━━━━━━━
+
+🔥 *Streaks:*
+• Current Streak: {current_streak} days
+• Longest Streak: {longest_streak} days
+
+━━━━━━━━━━━━━━━━━━━━
+
+📅 *Current Status:*
+• Today: Day {current_day} ({date_str})
+• Completion Rate: {completion_rate:.1f}% (of days so far)
+
+━━━━━━━━━━━━━━━━━━━━
+
+💡 *Tips:*
+• Read every day to maintain your streak!
+• Use /today to automatically mark today as completed"""
+                
+                keyboard = [
+                    [InlineKeyboardButton("📊 Progress", callback_data="menu_progress")],
+                    [InlineKeyboardButton("🔥 Streak", callback_data="menu_streak")],
+                    [InlineKeyboardButton("🔙 Main Menu", callback_data="menu_main")]
+                ]
+                
+                await query.edit_message_text(
+                    stats_text,
+                    parse_mode='Markdown',
+                    reply_markup=InlineKeyboardMarkup(keyboard)
+                )
+            
+            elif callback_data == "menu_ask":
+                topics = get_all_topics()
+                topics_list = "\n".join([f"• {topic}" for topic in topics[:10]])
+                ask_text = f"""❓ *Ask a Bible Question*
+
+━━━━━━━━━━━━━━━━━━━━
+
+Type your question or use these common questions:
+
+*Examples:*
+• How can I be saved?
+• What does the Bible say about love?
+• How should I pray?
+
+━━━━━━━━━━━━━━━━━━━━
+
+*Topics I can help with:*
+{topics_list}
+... and more!
+
+━━━━━━━━━━━━━━━━━━━━
+
+*Type your question or use /ask [question]*"""
+                
+                keyboard = [
+                    [InlineKeyboardButton("🔙 Main Menu", callback_data="menu_main")]
+                ]
+                
+                await query.edit_message_text(
+                    ask_text,
+                    parse_mode='Markdown',
+                    reply_markup=InlineKeyboardMarkup(keyboard)
+                )
+            
+            elif callback_data == "menu_search":
+                search_text = """📚 *Search Reading Plan*
+
+━━━━━━━━━━━━━━━━━━━━
+
+Type the name of a Bible book to find which days include it.
+
+*Examples:*
+• Genesis
+• Matthew
+• Psalms
+
+━━━━━━━━━━━━━━━━━━━━
+
+*Type a book name or use /search [book]*"""
+                
+                keyboard = [
+                    [InlineKeyboardButton("🔙 Main Menu", callback_data="menu_main")]
+                ]
+                
+                await query.edit_message_text(
+                    search_text,
+                    parse_mode='Markdown',
+                    reply_markup=InlineKeyboardMarkup(keyboard)
+                )
+            
+            elif callback_data == "reading_today":
+                day_number, date_str = self.get_day_of_year()
+                reading = self.get_bible_reading(day_number)
+                encouragement = self.get_encouragement(day_number)
+                message = self.format_message(day_number, date_str, reading, encouragement)
+                mark_day_completed(user_id, day_number)
+                await query.edit_message_text(
+                    message,
+                    parse_mode='Markdown',
+                    reply_markup=self.get_reading_menu_keyboard()
+                )
+            
+            elif callback_data == "reading_pick":
+                await query.edit_message_text(
+                    "📅 *Pick a Day*\n\n"
+                    "Type a day number (1-365) or use:\n"
+                    "/day [number]\n\n"
+                    "*Example:* /day 45",
+                    parse_mode='Markdown',
+                    reply_markup=self.get_reading_menu_keyboard()
+                )
+            
+            elif callback_data == "quiz_stop":
+                # Handle quiz stop from inline button
+                session = None
+                if str(user_id) in self._in_memory_quizzes:
+                    session = self._in_memory_quizzes[str(user_id)]
+                    del self._in_memory_quizzes[str(user_id)]
+                
+                if not session:
+                    session = end_quiz_session(user_id)
+                
+                if session and session['total'] > 0:
+                    user = query.from_user
+                    update_user_score(
+                        user_id, 
+                        session['score'], 
+                        session['total'],
+                        username=user.username,
+                        first_name=user.first_name
+                    )
+                    accuracy = (session['score'] / session['total'] * 100) if session['total'] > 0 else 0
+                    
+                    is_daily_quiz = session.get('is_daily_quiz', False)
+                    if is_daily_quiz:
+                        mark_daily_quiz_completed(user_id, session['score'], session['total'])
+                        newly_unlocked = check_and_award_achievements(user_id)
+                        message = f"✅ *Daily Challenge Completed!*\n\n"
+                        message += f"Final Score: {session['score']}/{session['total']} ({accuracy:.1f}%)\n\n"
+                        if newly_unlocked:
+                            message += "🎉 *New Achievement Unlocked!*\n\n"
+                            for achievement_id in newly_unlocked:
+                                achievement = ACHIEVEMENTS[achievement_id]
+                                message += f"{achievement['emoji']} {achievement['name']}\n"
+                            message += "\n"
+                        message += "Come back tomorrow for a new challenge!"
+                    else:
+                        message = f"✅ *Quiz Ended*\n\n"
+                        message += f"Final Score: {session['score']}/{session['total']} ({accuracy:.1f}%)\n\n"
+                        message += "Tap '🎯 Start Quiz' to start a new quiz!"
+                    
+                    keyboard = [
+                        [InlineKeyboardButton("🎯 Start Quiz", callback_data="menu_quiz")],
+                        [InlineKeyboardButton("📊 My Score", callback_data="menu_score")],
+                        [InlineKeyboardButton("🔙 Main Menu", callback_data="menu_main")]
+                    ]
+                    
+                    await query.edit_message_text(
+                        message,
+                        parse_mode='Markdown',
+                        reply_markup=InlineKeyboardMarkup(keyboard)
+                    )
+                else:
+                    await query.edit_message_text(
+                        "✅ Quiz session ended.\n\n"
+                        "Tap '🎯 Start Quiz' to start a new quiz!",
+                        parse_mode='Markdown',
+                        reply_markup=self.get_quick_actions_keyboard()
+                    )
+            
+            elif callback_data.startswith("quiz_answer_"):
+                # Handle quiz answer from inline keyboard
+                active_quiz = get_quiz_session(user_id)
+                if not active_quiz and str(user_id) in self._in_memory_quizzes:
+                    active_quiz = self._in_memory_quizzes[str(user_id)]
+                
+                if not active_quiz:
+                    await query.edit_message_text(
+                        "Your quiz session has ended. Please start a new one.",
+                        reply_markup=self.get_quick_actions_keyboard()
+                    )
+                    return
+                
+                question_data = active_quiz['question_data']
+                chosen_option_index = int(callback_data.split('_')[-1])
+                
+                is_correct = (chosen_option_index == question_data['correct'])
+                new_score = active_quiz['score'] + (1 if is_correct else 0)
+                new_total = active_quiz['total'] + 1
+                
+                try:
+                    update_quiz_session(user_id, new_score, new_total)
+                except Exception as e:
+                    logger.error(f"Error updating quiz session in file for user {user_id}: {e}")
+                
+                if str(user_id) in self._in_memory_quizzes:
+                    self._in_memory_quizzes[str(user_id)]['score'] = new_score
+                    self._in_memory_quizzes[str(user_id)]['total'] = new_total
+                
+                correct_option = question_data['options'][question_data['correct']]
+                feedback = f"✅ <b>Correct!</b>\n\n" if is_correct else f"❌ <b>Incorrect</b>\n\n"
+                feedback += f"The answer is: <b>{correct_option}</b>\n"
+                feedback += f"📖 {question_data['reference']}\n\n"
+                feedback += f"━━━━━━━━━━━━━━━━━━━━\n\n"
+                feedback += f"<b>Your Score:</b> {new_score}/{new_total}\n\n"
+                
+                user = query.from_user
+                update_user_score(user_id, new_score, new_total, username=user.username, first_name=user.first_name)
+                logger.info(f"User {user_id} answered quiz question via button: {'correct' if is_correct else 'incorrect'}")
+                
+                # Check if this is a daily quiz
+                is_daily_quiz = active_quiz.get('is_daily_quiz', False)
+                
+                if is_daily_quiz:
+                    # Daily quiz is complete after one question
+                    mark_daily_quiz_completed(user_id, new_score, new_total)
+                    try:
+                        end_quiz_session(user_id)
+                    except Exception as e:
+                        logger.error(f"Error ending daily quiz session: {e}")
+                    
+                    if str(user_id) in self._in_memory_quizzes:
+                        del self._in_memory_quizzes[str(user_id)]
+                    
+                    newly_unlocked = check_and_award_achievements(user_id)
+                    
+                    completion_msg = feedback + "━━━━━━━━━━━━━━━━━━━━\n\n"
+                    completion_msg += "✅ *Daily Challenge Completed!*\n\n"
+                    
+                    if newly_unlocked:
+                        completion_msg += "🎉 *New Achievement Unlocked!*\n\n"
+                        for achievement_id in newly_unlocked:
+                            achievement = ACHIEVEMENTS[achievement_id]
+                            completion_msg += f"{achievement['emoji']} {achievement['name']}\n"
+                        completion_msg += "\n"
+                    
+                    completion_msg += "Come back tomorrow for a new challenge!"
+                    
+                    keyboard = [
+                        [InlineKeyboardButton("⭐ New Challenge", callback_data="menu_daily_quiz")],
+                        [InlineKeyboardButton("🔙 Main Menu", callback_data="menu_main")]
+                    ]
+                    
+                    await query.edit_message_text(
+                        completion_msg,
+                        parse_mode='HTML',
+                        reply_markup=InlineKeyboardMarkup(keyboard)
+                    )
+                    return
+                
+                # For regular quizzes, continue with next question
+                await asyncio.sleep(1)
+                
+                quiz_difficulty = active_quiz.get('difficulty')
+                quiz_category = active_quiz.get('category')
+                new_question = get_random_question(difficulty=quiz_difficulty, category=quiz_category)
+                
+                user_id_str = str(user_id)
+                try:
+                    quizzes = load_active_quizzes()
+                    if user_id_str in quizzes:
+                        quizzes[user_id_str]['question_data'] = new_question
+                        quizzes[user_id_str]['question_index'] = 0
+                        quizzes[user_id_str]['score'] = new_score
+                        quizzes[user_id_str]['total'] = new_total
+                        if quiz_difficulty:
+                            quizzes[user_id_str]['difficulty'] = quiz_difficulty
+                        if quiz_category:
+                            quizzes[user_id_str]['category'] = quiz_category
+                        if not save_active_quizzes(quizzes):
+                            if user_id_str not in self._in_memory_quizzes:
+                                self._in_memory_quizzes[user_id_str] = {}
+                            self._in_memory_quizzes[user_id_str].update({
+                                'question_data': new_question, 'question_index': 0, 'score': new_score, 'total': new_total,
+                                'difficulty': quiz_difficulty, 'category': quiz_category
+                            })
+                    else:
+                        if user_id_str not in self._in_memory_quizzes:
+                            self._in_memory_quizzes[user_id_str] = {}
+                        self._in_memory_quizzes[user_id_str].update({
+                            'question_data': new_question, 'question_index': 0, 'score': new_score, 'total': new_total,
+                            'difficulty': quiz_difficulty, 'category': quiz_category
+                        })
+                except Exception as e:
+                    logger.error(f"Error updating quiz session with new question for user {user_id}: {e}")
+                    if user_id_str not in self._in_memory_quizzes:
+                        self._in_memory_quizzes[user_id_str] = {}
+                    self._in_memory_quizzes[user_id_str].update({
+                        'question_data': new_question, 'question_index': 0, 'score': new_score, 'total': new_total,
+                        'difficulty': quiz_difficulty, 'category': quiz_category
+                    })
+                
+                diff_name = new_question.get('difficulty', 'random').title()
+                next_question_msg = f"""🎯 <b>Next {diff_name} Quiz Question</b>
+
+━━━━━━━━━━━━━━━━━━━━
+
+<b>Question:</b>
+{new_question['question']}
+
+━━━━━━━━━━━━━━━━━━━━
+
+<b>Tap your answer below:</b>"""
+                
+                await query.edit_message_text(
+                    next_question_msg,
+                    parse_mode='HTML',
+                    reply_markup=self.get_quiz_answer_keyboard(new_question)
+                )
             
             elif callback_data == "menu_help":
                 help_text = """📖 *Bible in a Year Bot - Help*
 
-Use the buttons in the menu to navigate, or type commands like:
-• /today - Today's reading
-• /quiz - Start a quiz
-• /progress - Your progress
-• /help - Full help
+━━━━━━━━━━━━━━━━━━━━
 
-*Use /menu to return to the main menu!*"""
+*🎯 Main Features:*
+Everything is button-based! Just tap the buttons to interact.
+
+*📚 Reading:*
+• /today - Get today's Bible reading
+• /day [number] - Get reading for a specific day
+• /search [book] - Search for a Bible book
+
+*🎯 Quiz:*
+• /quiz - Start a random Bible quiz
+• /daily_quiz - Take today's special challenge
+• /score - View your statistics
+• /leaderboard - See top players
+
+*⭐ New Features:*
+• /verse - Get verse of the day
+• /achievements - View your badges
+• /remind [time] - Set reading reminders
+
+━━━━━━━━━━━━━━━━━━━━
+
+*Use the buttons below to navigate!*"""
                 
                 keyboard = [
                     [InlineKeyboardButton("🔙 Main Menu", callback_data="menu_main")]
