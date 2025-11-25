@@ -9,8 +9,8 @@ import logging
 import asyncio
 import re
 from datetime import datetime, timedelta
-from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, CallbackQueryHandler
 from telegram.error import TelegramError, Forbidden
 from dotenv import load_dotenv
 from reading_plan import get_reading_for_day, READING_PLANS
@@ -74,6 +74,10 @@ class BibleVerseBot:
         self.application.add_handler(CommandHandler("streak", self.streak_command))
         self.application.add_handler(CommandHandler("completed", self.completed_command))
         self.application.add_handler(CommandHandler("stats", self.stats_command))
+        self.application.add_handler(CommandHandler("menu", self.menu_command))
+        
+        # Callback query handler for inline buttons
+        self.application.add_handler(CallbackQueryHandler(self.handle_callback))
         
         # Message handler for queries (non-command messages)
         self.application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self.handle_query))
