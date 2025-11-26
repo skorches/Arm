@@ -186,3 +186,4 @@ def is_day_completed(user_id, day_number, year=None):
     progress = get_user_progress(user_id, year)
     return day_number in progress['completed_days']
 
+
