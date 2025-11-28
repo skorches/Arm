@@ -2175,9 +2175,11 @@ You don't have any reminders set.
                 )
             
             elif callback_data == "menu_progress":
+                from reading_progress import get_user_progress, get_current_streak, get_longest_streak
                 progress = get_user_progress(user_id)
                 current_streak = get_current_streak(user_id)
-                longest_streak = get_longest_streak(user_id)
+                longest_streak_this_year = get_longest_streak(user_id, year=datetime.now().year)
+                longest_streak_all_time = get_longest_streak(user_id, year=None)
                 current_day, _ = self.get_day_of_year()
                 
                 total_days = 365
@@ -2196,7 +2198,6 @@ You don't have any reminders set.
 {progress_bar}
 
 🔥 *Current Streak:* {current_streak} days
-🏆 *Longest Streak:* {longest_streak} days
 
 📅 *Today:* Day {current_day}
 ⏳ *Days Remaining:* {days_remaining}"""
