@@ -2812,7 +2812,7 @@ Type the name of a Bible book to find which days include it.
                 update_user_score(user_id, new_score, new_total, username=user.username, first_name=user.first_name)
                 logger.info(f"User {user_id} answered quiz question via button: {'correct' if is_correct else 'incorrect'}")
                 
-                # Send feedback as a reply message so it's clearly visible
+                # Send feedback as a NEW message (not editing) so previous question remains visible
                 try:
                     await query.message.reply_text(
                         feedback,
@@ -2837,11 +2837,11 @@ Type the name of a Bible book to find which days include it.
                     
                     newly_unlocked = check_and_award_achievements(user_id)
                     
-                    completion_msg = feedback + "━━━━━━━━━━━━━━━━━━━━\n\n"
-                    completion_msg += "✅ *Daily Challenge Completed!*\n\n"
+                    completion_msg = "━━━━━━━━━━━━━━━━━━━━\n\n"
+                    completion_msg += "✅ <b>Daily Challenge Completed!</b>\n\n"
                     
                     if newly_unlocked:
-                        completion_msg += "🎉 *New Achievement Unlocked!*\n\n"
+                        completion_msg += "🎉 <b>New Achievement Unlocked!</b>\n\n"
                         for achievement_id in newly_unlocked:
                             achievement = ACHIEVEMENTS[achievement_id]
                             completion_msg += f"{achievement['emoji']} {achievement['name']}\n"
@@ -2854,7 +2854,8 @@ Type the name of a Bible book to find which days include it.
                         [InlineKeyboardButton("🔙 Main Menu", callback_data="menu_main")]
                     ]
                     
-                    await self.safe_edit_message(query, 
+                    # Send completion as new message
+                    await query.message.reply_text(
                         completion_msg,
                         parse_mode='HTML',
                         reply_markup=InlineKeyboardMarkup(keyboard)
@@ -2920,7 +2921,8 @@ Type the name of a Bible book to find which days include it.
 
 <b>Tap your answer below:</b>"""
                 
-                await self.safe_edit_message(query, 
+                # Send next question as a NEW message (not editing) so all questions remain visible
+                await query.message.reply_text(
                     next_question_msg,
                     parse_mode='HTML',
                     reply_markup=self.get_quiz_answer_keyboard(new_question)
