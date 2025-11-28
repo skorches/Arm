@@ -25,7 +25,7 @@ from quiz_storage import (
     get_user_score, update_user_score, start_quiz_session,
     get_quiz_session, update_quiz_session, end_quiz_session,
     load_active_quizzes, save_active_quizzes, get_leaderboard,
-    get_user_rank, update_user_info
+    get_user_rank, update_user_info, save_quiz_to_history, get_quiz_history
 )
 from reading_progress import (
     mark_day_completed, get_user_progress, get_current_streak,
@@ -1413,68 +1413,59 @@ Choose your difficulty level:
                 )
                 return
             
-            # Automatically continue with another question (for regular quizzes)
+            # For regular quizzes: Save current session to history, end it, then start new session
             await asyncio.sleep(1)  # Small delay before next question
             
-            # Get difficulty and category from active quiz to maintain them
+            # Determine which option the user selected
+            user_selected_option_index = None
+            if answer_num is not None and 0 <= answer_num < len(question_data['options']):
+                user_selected_option_index = answer_num
+            
+            # Save current session to history before ending it
+            session_to_save = {
+                'question_data': question_data,
+                'score': new_score,
+                'total': new_total,
+                'difficulty': active_quiz.get('difficulty'),
+                'category': active_quiz.get('category'),
+                'chosen_answer': user_selected_option_index,
+                'is_correct': is_correct
+            }
+            save_quiz_to_history(user_id, session_to_save)
+            
+            # End current session
+            try:
+                end_quiz_session(user_id)
+            except Exception as e:
+                logger.error(f"Error ending quiz session: {e}")
+            
+            # Remove from in-memory quizzes
+            if str(user_id) in self._in_memory_quizzes:
+                del self._in_memory_quizzes[str(user_id)]
+            
+            # Get difficulty and category from previous session to maintain them
             quiz_difficulty = active_quiz.get('difficulty')
             quiz_category = active_quiz.get('category')
             
             # Get a new random question (keep same difficulty/category)
             new_question = get_random_question(difficulty=quiz_difficulty, category=quiz_category)
             
-            # Update the quiz session with new question while preserving score and filters
+            # Start a NEW session with the new question
             user_id_str = str(user_id)
             try:
-                quizzes = load_active_quizzes()
-                if user_id_str in quizzes:
-                    quizzes[user_id_str]['question_data'] = new_question
-                    quizzes[user_id_str]['question_index'] = 0
-                    # Preserve difficulty and category
-                    if quiz_difficulty:
-                        quizzes[user_id_str]['difficulty'] = quiz_difficulty
-                    if quiz_category:
-                        quizzes[user_id_str]['category'] = quiz_category
-                    # Keep the existing score and total
-                    if not save_active_quizzes(quizzes):
-                        logger.warning(f"Failed to save active quiz to file for user {user_id}, using in-memory")
-                        # Update in-memory instead
-                        if user_id_str not in self._in_memory_quizzes:
-                            self._in_memory_quizzes[user_id_str] = {}
-                        self._in_memory_quizzes[user_id_str].update({
-                            'question_data': new_question,
-                            'question_index': 0,
-                            'score': new_score,
-                            'total': new_total,
-                            'difficulty': quiz_difficulty,
-                            'category': quiz_category
-                        })
-                else:
-                    # Session was lost, create a new one
-                    logger.warning(f"Quiz session lost in file for user {user_id}, using in-memory")
-                    if user_id_str not in self._in_memory_quizzes:
-                        self._in_memory_quizzes[user_id_str] = {}
-                    self._in_memory_quizzes[user_id_str].update({
-                        'question_data': new_question,
-                        'question_index': 0,
-                        'score': new_score,
-                        'total': new_total,
-                        'difficulty': quiz_difficulty,
-                        'category': quiz_category
-                    })
+                start_quiz_session(user_id, 0, new_question, difficulty=quiz_difficulty, category=quiz_category)
             except Exception as e:
-                logger.error(f"Error updating quiz session with new question for user {user_id}: {e}")
-                # Use in-memory fallback
-                if user_id_str not in self._in_memory_quizzes:
-                    self._in_memory_quizzes[user_id_str] = {}
-                self._in_memory_quizzes[user_id_str].update({
-                    'question_data': new_question,
-                    'question_index': 0,
-                    'score': new_score,
-                    'total': new_total,
-                    'difficulty': quiz_difficulty,
-                    'category': quiz_category
-                })
+                logger.error(f"Error starting new quiz session: {e}")
+            
+            # Also save in-memory as fallback
+            self._in_memory_quizzes[user_id_str] = {
+                'question_data': new_question,
+                'question_index': 0,
+                'score': 0,  # Reset score for new session
+                'total': 0,  # Reset total for new session
+                'difficulty': quiz_difficulty,
+                'category': quiz_category
+            }
             
             # Format new question with options
             new_options_text = ""
@@ -1485,7 +1476,7 @@ Choose your difficulty level:
             diff_info = f"Difficulty: {new_question.get('difficulty', 'unknown').title()}\n" if new_question.get('difficulty') else ""
             cat_info = f"Category: {CATEGORIES.get(new_question.get('category', ''), 'General')}\n" if new_question.get('category') else ""
             
-            next_question_msg = f"""🎯 <b>Next Question</b>
+            next_question_msg = f"""🎯 <b>New Question</b>
 
 {diff_info}{cat_info}<b>Question:</b>
 {new_question['question']}
@@ -2870,50 +2861,55 @@ Type the name of a Bible book to find which days include it.
                     )
                     return
                 
-                # For regular quizzes, continue with next question
+                # For regular quizzes: Save current session to history, end it, then start new session
                 await asyncio.sleep(1)
                 
+                # Save current session to history before ending it
+                session_to_save = {
+                    'question_data': question_data,
+                    'score': new_score,
+                    'total': new_total,
+                    'difficulty': active_quiz.get('difficulty'),
+                    'category': active_quiz.get('category'),
+                    'chosen_answer': chosen_option_index,
+                    'is_correct': is_correct
+                }
+                save_quiz_to_history(user_id, session_to_save)
+                
+                # End current session
+                try:
+                    end_quiz_session(user_id)
+                except Exception as e:
+                    logger.error(f"Error ending quiz session: {e}")
+                
+                # Remove from in-memory quizzes
+                if str(user_id) in self._in_memory_quizzes:
+                    del self._in_memory_quizzes[str(user_id)]
+                
+                # Get new question with same difficulty/category
                 quiz_difficulty = active_quiz.get('difficulty')
                 quiz_category = active_quiz.get('category')
                 new_question = get_random_question(difficulty=quiz_difficulty, category=quiz_category)
                 
+                # Start a NEW session with the new question
                 user_id_str = str(user_id)
                 try:
-                    quizzes = load_active_quizzes()
-                    if user_id_str in quizzes:
-                        quizzes[user_id_str]['question_data'] = new_question
-                        quizzes[user_id_str]['question_index'] = 0
-                        quizzes[user_id_str]['score'] = new_score
-                        quizzes[user_id_str]['total'] = new_total
-                        if quiz_difficulty:
-                            quizzes[user_id_str]['difficulty'] = quiz_difficulty
-                        if quiz_category:
-                            quizzes[user_id_str]['category'] = quiz_category
-                        if not save_active_quizzes(quizzes):
-                            if user_id_str not in self._in_memory_quizzes:
-                                self._in_memory_quizzes[user_id_str] = {}
-                            self._in_memory_quizzes[user_id_str].update({
-                                'question_data': new_question, 'question_index': 0, 'score': new_score, 'total': new_total,
-                                'difficulty': quiz_difficulty, 'category': quiz_category
-                            })
-                    else:
-                        if user_id_str not in self._in_memory_quizzes:
-                            self._in_memory_quizzes[user_id_str] = {}
-                        self._in_memory_quizzes[user_id_str].update({
-                            'question_data': new_question, 'question_index': 0, 'score': new_score, 'total': new_total,
-                            'difficulty': quiz_difficulty, 'category': quiz_category
-                        })
+                    start_quiz_session(user_id, 0, new_question, difficulty=quiz_difficulty, category=quiz_category)
                 except Exception as e:
-                    logger.error(f"Error updating quiz session with new question for user {user_id}: {e}")
-                    if user_id_str not in self._in_memory_quizzes:
-                        self._in_memory_quizzes[user_id_str] = {}
-                    self._in_memory_quizzes[user_id_str].update({
-                        'question_data': new_question, 'question_index': 0, 'score': new_score, 'total': new_total,
-                        'difficulty': quiz_difficulty, 'category': quiz_category
-                    })
+                    logger.error(f"Error starting new quiz session: {e}")
+                
+                # Also save in-memory as fallback
+                self._in_memory_quizzes[user_id_str] = {
+                    'question_data': new_question,
+                    'question_index': 0,
+                    'score': 0,  # Reset score for new session
+                    'total': 0,  # Reset total for new session
+                    'difficulty': quiz_difficulty,
+                    'category': quiz_category
+                }
                 
                 diff_name = new_question.get('difficulty', 'random').title()
-                next_question_msg = f"""🎯 <b>Next {diff_name} Quiz Question</b>
+                next_question_msg = f"""🎯 <b>New {diff_name} Quiz Question</b>
 
 ━━━━━━━━━━━━━━━━━━━━
 

@@ -19,6 +19,8 @@ services:
       - ./achievements.json:/app/achievements.json
       # Persist reminders
       - ./reminders.json:/app/reminders.json
+      # Persist quiz history
+      - ./quiz_history.json:/app/quiz_history.json
     environment:
       - TZ=GMT
       # Bot token can be set here or in .env file

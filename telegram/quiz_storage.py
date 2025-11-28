@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 SCORES_FILE = os.path.join(SCRIPT_DIR, "quiz_scores.json")
 ACTIVE_QUIZZES_FILE = os.path.join(SCRIPT_DIR, "active_quizzes.json")
+QUIZ_HISTORY_FILE = os.path.join(SCRIPT_DIR, "quiz_history.json")
 
 def _fix_storage_file(file_path):
     """Fix storage file if it's a directory (Docker volume mount issue)"""
@@ -29,6 +30,7 @@ def _fix_storage_file(file_path):
 try:
     _fix_storage_file(SCORES_FILE)
     _fix_storage_file(ACTIVE_QUIZZES_FILE)
+    _fix_storage_file(QUIZ_HISTORY_FILE)
 except Exception as e:
     logger.error(f"Error checking storage files: {e}")
 
@@ -234,4 +236,67 @@ def end_quiz_session(user_id):
         save_active_quizzes(quizzes)
         return session
     return None
+
+def save_quiz_to_history(user_id, session_data):
+    """Save a completed quiz session to history"""
+    import datetime
+    
+    # Check if storage file is a directory
+    if os.path.exists(QUIZ_HISTORY_FILE) and os.path.isdir(QUIZ_HISTORY_FILE):
+        logger.error(f"Storage file is a directory! Cannot save history: {QUIZ_HISTORY_FILE}")
+        return False
+    
+    try:
+        # Load existing history
+        if os.path.exists(QUIZ_HISTORY_FILE):
+            with open(QUIZ_HISTORY_FILE, 'r') as f:
+                history = json.load(f)
+        else:
+            history = {}
+        
+        user_id_str = str(user_id)
+        
+        # Initialize user history if needed
+        if user_id_str not in history:
+            history[user_id_str] = []
+        
+        # Add timestamp and save session
+        session_with_timestamp = {
+            **session_data,
+            'completed_at': datetime.datetime.now().isoformat(),
+            'session_id': f"{user_id_str}_{datetime.datetime.now().timestamp()}"
+        }
+        
+        history[user_id_str].append(session_with_timestamp)
+        
+        # Keep only last 100 sessions per user to prevent file from growing too large
+        if len(history[user_id_str]) > 100:
+            history[user_id_str] = history[user_id_str][-100:]
+        
+        # Save history
+        with open(QUIZ_HISTORY_FILE, 'w') as f:
+            json.dump(history, f, indent=2)
+        
+        return True
+    except Exception as e:
+        logger.error(f"Error saving quiz to history: {e}")
+        return False
+
+def get_quiz_history(user_id, limit=10):
+    """Get quiz history for a user"""
+    if not os.path.exists(QUIZ_HISTORY_FILE):
+        return []
+    
+    try:
+        with open(QUIZ_HISTORY_FILE, 'r') as f:
+            history = json.load(f)
+        
+        user_id_str = str(user_id)
+        user_history = history.get(user_id_str, [])
+        
+        # Return most recent sessions first
+        return list(reversed(user_history[-limit:]))
+    except Exception as e:
+        logger.error(f"Error loading quiz history: {e}")
+        return []
 
