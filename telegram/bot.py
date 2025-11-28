@@ -1325,13 +1325,34 @@ Choose your difficulty level:
                 self._in_memory_quizzes[str(user_id)]['score'] = new_score
                 self._in_memory_quizzes[str(user_id)]['total'] = new_total
             
-            # Send feedback
+            # Send enhanced feedback
             correct_option = question_data['options'][question_data['correct']]
-            if is_correct:
-                feedback = f"✅ <b>Correct!</b>\n\nThe answer is: <b>{correct_option}</b>\n📖 {question_data['reference']}\n\n"
-            else:
-                feedback = f"❌ <b>Incorrect</b>\n\nThe correct answer is: <b>{correct_option}</b>\n📖 {question_data['reference']}\n\n"
             
+            # Determine which option the user selected
+            user_selected_option = None
+            if answer_num is not None and 0 <= answer_num < len(question_data['options']):
+                user_selected_option = question_data['options'][answer_num]
+            
+            # Build enhanced feedback
+            if is_correct:
+                feedback = f"✅ <b>Correct!</b>\n\n"
+                if user_selected_option:
+                    feedback += f"<b>Your answer:</b> {user_selected_option}\n\n"
+            else:
+                feedback = f"❌ <b>Incorrect</b>\n\n"
+                if user_selected_option:
+                    feedback += f"<b>Your answer:</b> {user_selected_option}\n"
+                feedback += f"<b>Correct answer:</b> {correct_option}\n\n"
+            
+            # Try to get the actual Bible verse
+            verse_data = get_verse_by_reference(question_data['reference'])
+            if verse_data:
+                feedback += f"📖 <b>{verse_data['reference']}</b>\n\n"
+                feedback += f"<i>\"{verse_data['verse']}\"</i>\n\n"
+            else:
+                feedback += f"📖 <b>Bible Reference:</b> {question_data['reference']}\n\n"
+            
+            feedback += f"━━━━━━━━━━━━━━━━━━━━\n\n"
             feedback += f"<b>Your Score:</b> {new_score}/{new_total}\n\n"
             
             await update.message.reply_text(
@@ -2774,15 +2795,40 @@ Type the name of a Bible book to find which days include it.
                     self._in_memory_quizzes[str(user_id)]['total'] = new_total
                 
                 correct_option = question_data['options'][question_data['correct']]
-                feedback = f"✅ <b>Correct!</b>\n\n" if is_correct else f"❌ <b>Incorrect</b>\n\n"
-                feedback += f"The answer is: <b>{correct_option}</b>\n"
-                feedback += f"📖 {question_data['reference']}\n\n"
+                chosen_option = question_data['options'][chosen_option_index]
+                
+                # Build enhanced feedback
+                if is_correct:
+                    feedback = f"✅ <b>Correct!</b>\n\n"
+                    feedback += f"<b>Your answer:</b> {chosen_option}\n\n"
+                else:
+                    feedback = f"❌ <b>Incorrect</b>\n\n"
+                    feedback += f"<b>Your answer:</b> {chosen_option}\n"
+                    feedback += f"<b>Correct answer:</b> {correct_option}\n\n"
+                
+                # Try to get the actual Bible verse
+                verse_data = get_verse_by_reference(question_data['reference'])
+                if verse_data:
+                    feedback += f"📖 <b>{verse_data['reference']}</b>\n\n"
+                    feedback += f"<i>\"{verse_data['verse']}\"</i>\n\n"
+                else:
+                    feedback += f"📖 <b>Bible Reference:</b> {question_data['reference']}\n\n"
+                
                 feedback += f"━━━━━━━━━━━━━━━━━━━━\n\n"
                 feedback += f"<b>Your Score:</b> {new_score}/{new_total}\n\n"
                 
                 user = query.from_user
                 update_user_score(user_id, new_score, new_total, username=user.username, first_name=user.first_name)
                 logger.info(f"User {user_id} answered quiz question via button: {'correct' if is_correct else 'incorrect'}")
+                
+                # Send feedback as a reply message so it's clearly visible
+                try:
+                    await query.message.reply_text(
+                        feedback,
+                        parse_mode='HTML'
+                    )
+                except Exception as e:
+                    logger.error(f"Error sending feedback message: {e}")
                 
                 # Check if this is a daily quiz
                 is_daily_quiz = active_quiz.get('is_daily_quiz', False)
