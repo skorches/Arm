@@ -205,22 +205,43 @@ def check_and_award_achievements(user_id, reading_progress=None, quiz_stats=None
 
 def get_achievement_display(user_id):
     """Get formatted achievement display for user"""
+    achievements_data = load_achievements()
+    user_id_str = str(user_id)
     unlocked = get_user_achievements(user_id)
+    unlocked_at = achievements_data.get(user_id_str, {}).get('unlocked_at', {})
     
     display = "🏆 *Your Achievements*\n\n"
+    display += "━━━━━━━━━━━━━━━━━━━━\n\n"
     
-    if not unlocked:
-        display += "No achievements yet. Keep using the bot to unlock badges!\n\n"
-    else:
+    # Show unlocked achievements first
+    if unlocked:
+        display += "*✅ Unlocked Achievements:*\n\n"
         for achievement_id in unlocked:
             achievement = ACHIEVEMENTS[achievement_id]
+            unlock_date = unlocked_at.get(achievement_id, "Unknown")
+            if unlock_date != "Unknown":
+                try:
+                    from datetime import datetime
+                    date_obj = datetime.fromisoformat(unlock_date)
+                    unlock_date = date_obj.strftime("%B %d, %Y")
+                except:
+                    pass
             display += f"{achievement['emoji']} *{achievement['name']}*\n"
+            display += f"   {achievement['description']}\n"
+            display += f"   📅 Unlocked: {unlock_date}\n\n"
+        display += "━━━━━━━━━━━━━━━━━━━━\n\n"
+    
+    # Show locked achievements
+    locked = [aid for aid in ACHIEVEMENTS.keys() if aid not in unlocked]
+    if locked:
+        display += "*🔒 Locked Achievements:*\n\n"
+        for achievement_id in locked:
+            achievement = ACHIEVEMENTS[achievement_id]
+            display += f"🔒 {achievement['name']}\n"
             display += f"   {achievement['description']}\n\n"
     
-    display += "*Available Achievements:*\n"
-    for achievement_id, achievement in ACHIEVEMENTS.items():
-        if achievement_id not in unlocked:
-            display += f"🔒 {achievement['name']} - {achievement['description']}\n"
+    if not unlocked and not locked:
+        display += "No achievements available.\n"
     
     return display
 

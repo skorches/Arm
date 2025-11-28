@@ -878,13 +878,20 @@ This bot follows a complete Bible in a Year reading plan, combining Old Testamen
         if user_rank:
             rank_info = f"🏅 *Rank:* #{user_rank}\n"
         
+        # Get best session info
+        best_session_score = score.get('best_session_score', 0)
+        best_session_total = score.get('best_session_total', 0)
+        best_session_info = ""
+        if best_session_total > 0:
+            best_session_accuracy = (best_session_score / best_session_total) * 100
+            best_session_info = f"🏆 *Best Quiz Session:* {best_session_score}/{best_session_total} ({best_session_accuracy:.1f}%)\n"
+        
         score_message = f"""📊 *Your Quiz Statistics*
 
 {rank_info}✅ *Total Correct:* {score['total_correct']}
 📝 *Total Answered:* {score['total_answered']}
-📈 *Accuracy:* {accuracy:.1f}%
-🏆 *Best Score:* {score['best_score']:.1f}%
-🎯 *Quizzes Completed:* {score['quizzes_completed']}
+📈 *Overall Accuracy:* {accuracy:.1f}%
+{best_session_info}📚 *Quizzes Completed:* {score.get('quizzes_completed', 0)}
 
 *Quiz Options:*
 • /quiz - Random question
@@ -1433,6 +1440,19 @@ Choose your difficulty level:
             }
             save_quiz_to_history(user_id, session_to_save)
             
+            # Update user score with this question AND track complete quiz session
+            # Since each question is now a separate session, we track it as a 1-question quiz
+            user = update.effective_user
+            update_user_score(
+                user_id, 
+                new_score,  # 1 if correct, 0 if incorrect
+                new_total,  # Always 1 for single question
+                username=user.username,
+                first_name=user.first_name,
+                quiz_session_score=new_score,  # Score for this session
+                quiz_session_total=new_total   # Total for this session (always 1)
+            )
+            
             # End current session
             try:
                 end_quiz_session(user_id)
@@ -1954,7 +1974,8 @@ You don't have any reminders set.
         self._ensure_subscribed(user_id)
         
         current_streak = get_current_streak(user_id)
-        longest_streak = get_longest_streak(user_id)
+        longest_streak_this_year = get_longest_streak(user_id, year=datetime.now().year)
+        longest_streak_all_time = get_longest_streak(user_id, year=None)  # All-time
         progress = get_user_progress(user_id)
         current_day, _ = self.get_day_of_year()
         
@@ -1964,7 +1985,8 @@ You don't have any reminders set.
         streak_text = f"""🔥 *Your Reading Streak*
 
 📅 *Current Streak:* {current_streak} days
-🏆 *Longest Streak This Year:* {longest_streak} days
+🏆 *Longest Streak (This Year):* {longest_streak_this_year} days
+🌟 *Longest Streak (All-Time):* {longest_streak_all_time} days
 
 {"✅ Today's reading is completed!" if today_completed else "⚠️ Don't forget to read today! Use /today"}
         
@@ -2876,6 +2898,19 @@ Type the name of a Bible book to find which days include it.
                     'is_correct': is_correct
                 }
                 save_quiz_to_history(user_id, session_to_save)
+                
+                # Update user score with this question AND track complete quiz session
+                # Since each question is now a separate session, we track it as a 1-question quiz
+                user = query.from_user
+                update_user_score(
+                    user_id, 
+                    new_score,  # 1 if correct, 0 if incorrect
+                    new_total,  # Always 1 for single question
+                    username=user.username,
+                    first_name=user.first_name,
+                    quiz_session_score=new_score,  # Score for this session
+                    quiz_session_total=new_total   # Total for this session (always 1)
+                )
                 
                 # End current session
                 try:

@@ -156,10 +156,61 @@ def get_current_streak(user_id, year=None):
         return streak
 
 def get_longest_streak(user_id, year=None):
-    """Calculate longest reading streak for the year"""
+    """Calculate longest reading streak for the year (or all-time if year is None)"""
     if year is None:
-        year = datetime.now().year
+        # Get all-time longest streak across all years
+        progress = load_reading_progress()
+        user_id_str = str(user_id)
+        
+        if user_id_str not in progress:
+            return 0
+        
+        all_days = []
+        for year_str, year_data in progress[user_id_str].items():
+            try:
+                year_num = int(year_str)
+                completed_days = year_data.get('completed_days', [])
+                # Convert to absolute day numbers (accounting for year)
+                for day in completed_days:
+                    # Calculate absolute day number from year start
+                    all_days.append((year_num, day))
+            except (ValueError, KeyError):
+                continue
+        
+        if not all_days:
+            return 0
+        
+        # Sort by year and day
+        all_days.sort()
+        
+        # Calculate longest streak across years
+        longest_streak = 1
+        current_streak = 1
+        
+        for i in range(1, len(all_days)):
+            prev_year, prev_day = all_days[i-1]
+            curr_year, curr_day = all_days[i]
+            
+            # Check if consecutive (same year and next day, or year transition)
+            if curr_year == prev_year and curr_day == prev_day + 1:
+                current_streak += 1
+                longest_streak = max(longest_streak, current_streak)
+            elif curr_year == prev_year + 1:
+                # Check if it's the last day of previous year and first day of current year
+                from datetime import date
+                prev_date = date(prev_year, 1, 1)
+                prev_absolute = (prev_date.replace(month=12, day=31) - prev_date).days + 1
+                if prev_day == prev_absolute and curr_day == 1:
+                    current_streak += 1
+                    longest_streak = max(longest_streak, current_streak)
+                else:
+                    current_streak = 1
+            else:
+                current_streak = 1
+        
+        return longest_streak
     
+    # Single year calculation (original logic)
     progress = get_user_progress(user_id, year)
     completed_days = sorted(progress['completed_days'])
     

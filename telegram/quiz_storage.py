@@ -93,8 +93,18 @@ def update_user_info(user_id, username=None, first_name=None):
     
     return save_quiz_scores(scores)
 
-def update_user_score(user_id, correct, total, username=None, first_name=None):
-    """Update user's quiz score"""
+def update_user_score(user_id, correct, total, username=None, first_name=None, quiz_session_score=None, quiz_session_total=None):
+    """Update user's quiz score
+    
+    Args:
+        user_id: User ID
+        correct: Number of correct answers in this update
+        total: Number of total answers in this update
+        username: Optional username
+        first_name: Optional first name
+        quiz_session_score: Optional total score for a complete quiz session
+        quiz_session_total: Optional total questions for a complete quiz session
+    """
     scores = load_quiz_scores()
     user_id_str = str(user_id)
     
@@ -104,6 +114,8 @@ def update_user_score(user_id, correct, total, username=None, first_name=None):
             'total_correct': 0,
             'quizzes_completed': 0,
             'best_score': 0,
+            'best_session_score': 0,
+            'best_session_total': 0,
             'username': None,
             'first_name': None
         }
@@ -114,14 +126,28 @@ def update_user_score(user_id, correct, total, username=None, first_name=None):
     if first_name:
         scores[user_id_str]['first_name'] = first_name
     
+    # Update cumulative stats
     scores[user_id_str]['total_answered'] += total
     scores[user_id_str]['total_correct'] += correct
-    scores[user_id_str]['quizzes_completed'] += 1
     
-    # Calculate accuracy percentage
+    # If this is a complete quiz session, track it
+    if quiz_session_score is not None and quiz_session_total is not None and quiz_session_total > 0:
+        session_accuracy = (quiz_session_score / quiz_session_total) * 100
+        scores[user_id_str]['quizzes_completed'] += 1
+        
+        # Track best session score
+        current_best = scores[user_id_str].get('best_session_score', 0)
+        current_best_total = scores[user_id_str].get('best_session_total', 0)
+        current_best_accuracy = (current_best / current_best_total * 100) if current_best_total > 0 else 0
+        
+        if session_accuracy > current_best_accuracy or (session_accuracy == current_best_accuracy and quiz_session_total > current_best_total):
+            scores[user_id_str]['best_session_score'] = quiz_session_score
+            scores[user_id_str]['best_session_total'] = quiz_session_total
+    
+    # Calculate overall accuracy percentage
     accuracy = (scores[user_id_str]['total_correct'] / scores[user_id_str]['total_answered']) * 100 if scores[user_id_str]['total_answered'] > 0 else 0
     
-    # Update best score if this quiz was better
+    # Update best score if this update improved it
     if accuracy > scores[user_id_str]['best_score']:
         scores[user_id_str]['best_score'] = accuracy
     
