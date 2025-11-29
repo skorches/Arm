@@ -1895,7 +1895,25 @@ You don't have any reminders set.
             if "message is not modified" in str(e).lower():
                 logger.debug(f"Message not modified (same content): {e}")
                 return
-            # For other BadRequest errors (like parsing errors), log and try to send new message
+            # For parsing errors, log the message content and try without parse_mode as fallback
+            error_msg = str(e)
+            if "can't parse entities" in error_msg.lower() or "parse" in error_msg.lower():
+                logger.error(f"BadRequest parsing error: {e}")
+                logger.error(f"Message content (first 300 chars): {text[:300]}")
+                # Try sending without parse_mode as fallback
+                try:
+                    # Remove HTML tags for plain text fallback
+                    import re
+                    plain_text = re.sub(r'<[^>]+>', '', text)  # Remove HTML tags
+                    await query.message.reply_text(
+                        plain_text,
+                        reply_markup=reply_markup
+                    )
+                    logger.info("Successfully sent message as plain text fallback")
+                    return
+                except Exception as e2:
+                    logger.error(f"Error sending plain text fallback: {e2}")
+            # For other BadRequest errors, try to send new message
             logger.error(f"BadRequest error editing message: {e}")
             try:
                 await query.message.reply_text(
@@ -2512,9 +2530,10 @@ Type the name of a Bible book to find which days include it.
             }
             
             diff_name = difficulty.title() if difficulty else "Random"
-            # Escape HTML special characters in question text
+            # Escape HTML special characters in question text and diff_name
             escaped_question = html.escape(question['question'])
-            quiz_message = f"""🎯 <b>{diff_name} Bible Quiz Started!</b>
+            escaped_diff_name = html.escape(diff_name)
+            quiz_message = f"""🎯 <b>{escaped_diff_name} Bible Quiz Started!</b>
 
 {MESSAGE_SEPARATOR}
 
@@ -2524,6 +2543,9 @@ Type the name of a Bible book to find which days include it.
 {MESSAGE_SEPARATOR}
 
 <b>Tap your answer below:</b>"""
+            
+            # Log message for debugging (first 200 chars)
+            logger.debug(f"Quiz message preview (first 200 chars): {quiz_message[:200]}")
             
             await self.safe_edit_message(query, 
                 quiz_message, 
