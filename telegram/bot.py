@@ -1903,6 +1903,7 @@ You don't have any reminders set.
     
     async def _handle_menu_callback(self, query, callback_data: str, user_id: int):
         """Handle menu-related callbacks"""
+        logger.debug(f"_handle_menu_callback: {callback_data} for user {user_id}")
         if callback_data == "menu_main":
             await self.safe_edit_message(
                 query,
@@ -1992,7 +1993,8 @@ You don't have any reminders set.
                 reply_markup=InlineKeyboardMarkup(keyboard)
             )
         elif callback_data == "menu_quiz":
-            quiz_text = f"""🎯 *Bible Quiz*
+            try:
+                quiz_text = f"""🎯 *Bible Quiz*
 
 Choose your difficulty level:
 • 🟢 Easy - Beginner questions
@@ -2001,12 +2003,23 @@ Choose your difficulty level:
 • 🎲 Random - Mixed difficulty
 
 *{TOTAL_QUIZ_QUESTIONS}+ questions covering all 66 books of the Bible!*"""
-            
-            await self.safe_edit_message(query, 
-                quiz_text,
-                parse_mode='Markdown',
-                reply_markup=self.get_quiz_menu_keyboard()
-            )
+                
+                await self.safe_edit_message(query, 
+                    quiz_text,
+                    parse_mode='Markdown',
+                    reply_markup=self.get_quiz_menu_keyboard()
+                )
+                logger.info(f"Successfully handled menu_quiz callback for user {user_id}")
+            except Exception as e:
+                logger.error(f"Error in menu_quiz handler for user {user_id}: {e}", exc_info=True)
+                # Try to send error message
+                try:
+                    await query.message.reply_text(
+                        f"❌ Error loading quiz menu. Please try again.",
+                        reply_markup=self.get_main_menu_keyboard()
+                    )
+                except:
+                    pass
         elif callback_data == "menu_help":
             help_text = f"""📖 *Bible in a Year Bot - Help*
 
@@ -2814,9 +2827,12 @@ Type the name of a Bible book to find which days include it.
         self._ensure_subscribed(user_id)
         callback_data = query.data
         
+        logger.info(f"Received callback: {callback_data} from user {user_id}")
+        
         try:
             # Route to appropriate handler based on callback prefix
             if callback_data.startswith("menu_"):
+                logger.debug(f"Routing {callback_data} to _handle_menu_callback")
                 await self._handle_menu_callback(query, callback_data, user_id)
             elif callback_data.startswith("quiz_") or callback_data.startswith("daily_quiz_"):
                 await self._handle_quiz_callback(query, callback_data, user_id)
