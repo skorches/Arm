@@ -8,6 +8,7 @@ import os
 import logging
 import asyncio
 import re
+import html
 from datetime import datetime, timedelta
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, CallbackQueryHandler
@@ -722,10 +723,12 @@ This bot follows a complete Bible in a Year reading plan, combining Old Testamen
         cat_info = f"Category: {CATEGORIES.get(question.get('category', ''), 'General')}\n" if question.get('category') else ""
         
         # Use HTML parse mode to avoid Markdown escaping issues
+        # Escape HTML special characters in question text
+        escaped_question = html.escape(question['question'])
         quiz_message = f"""🎯 <b>Bible Quiz Started!</b>
 
 {diff_info}{cat_info}<b>Question:</b>
-{question['question']}
+{escaped_question}
 
 <b>Tap your answer below:</b>"""
         
@@ -789,10 +792,12 @@ This bot follows a complete Bible in a Year reading plan, combining Old Testamen
         for i, option in enumerate(question['options']):
             options_text += f"{i+1}. {option}\n"
         
+        # Escape HTML special characters in question text
+        escaped_question = html.escape(question['question'])
         quiz_message = f"""🎯 <b>Easy Bible Quiz Started!</b>
 
 <b>Question:</b>
-{question['question']}
+{escaped_question}
 
 <b>Tap your answer below:</b>"""
         
@@ -856,10 +861,12 @@ This bot follows a complete Bible in a Year reading plan, combining Old Testamen
         for i, option in enumerate(question['options']):
             options_text += f"{i+1}. {option}\n"
         
+        # Escape HTML special characters in question text
+        escaped_question = html.escape(question['question'])
         quiz_message = f"""🎯 <b>Medium Bible Quiz Started!</b>
 
 <b>Question:</b>
-{question['question']}
+{escaped_question}
 
 <b>Tap your answer below:</b>"""
         
@@ -923,10 +930,12 @@ This bot follows a complete Bible in a Year reading plan, combining Old Testamen
         for i, option in enumerate(question['options']):
             options_text += f"{i+1}. {option}\n"
         
+        # Escape HTML special characters in question text
+        escaped_question = html.escape(question['question'])
         quiz_message = f"""🎯 <b>Hard Bible Quiz Started!</b>
 
 <b>Question:</b>
-{question['question']}
+{escaped_question}
 
 <b>Tap your answer below:</b>"""
         
@@ -1423,12 +1432,14 @@ Keep learning! Use /quiz to take another quiz."""
             'is_daily_quiz': True  # Mark as daily quiz
         }
         
+        # Escape HTML special characters in question text
+        escaped_question = html.escape(question['question'])
         quiz_message = f"""⭐ <b>Daily Challenge Quiz!</b>
 
 {MESSAGE_SEPARATOR}
 
 🎯 <b>Today's Special Question:</b>
-{question['question']}
+{escaped_question}
 
 {MESSAGE_SEPARATOR}
 
@@ -2113,12 +2124,14 @@ Everything is button-based! Just tap the buttons to interact.
                 'is_daily_quiz': True
             }
             
+            # Escape HTML special characters in question text
+            escaped_question = html.escape(question['question'])
             quiz_message = f"""⭐ <b>Daily Challenge Quiz!</b>
 
 {MESSAGE_SEPARATOR}
 
 🎯 <b>Today's Special Question:</b>
-{question['question']}
+{escaped_question}
 
 {MESSAGE_SEPARATOR}
 
@@ -2499,12 +2512,14 @@ Type the name of a Bible book to find which days include it.
             }
             
             diff_name = difficulty.title() if difficulty else "Random"
+            # Escape HTML special characters in question text
+            escaped_question = html.escape(question['question'])
             quiz_message = f"""🎯 <b>{diff_name} Bible Quiz Started!</b>
 
 {MESSAGE_SEPARATOR}
 
 <b>Question:</b>
-{question['question']}
+{escaped_question}
 
 {MESSAGE_SEPARATOR}
 
@@ -2771,12 +2786,14 @@ Type the name of a Bible book to find which days include it.
         }
         
         diff_name = new_question.get('difficulty', 'random').title()
+        # Escape HTML special characters in question text
+        escaped_question = html.escape(new_question['question'])
         next_question_msg = f"""🎯 <b>New {diff_name} Quiz Question</b>
 
 {MESSAGE_SEPARATOR}
 
 <b>Question:</b>
-{new_question['question']}
+{escaped_question}
 
 {MESSAGE_SEPARATOR}
 
