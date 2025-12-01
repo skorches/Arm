@@ -4,6 +4,7 @@ Multiple choice questions with answers, difficulty levels, and categories
 """
 
 QUIZ_QUESTIONS = [
+    # EASY - Old Testament
     {
         "question": "Who built the ark?",
         "options": ["Noah", "Moses", "Abraham", "David"],
@@ -84,6 +85,8 @@ QUIZ_QUESTIONS = [
         "difficulty": "easy",
         "category": "old_testament"
     },
+    
+    # EASY - New Testament
     {
         "question": "What was the first miracle Jesus performed?",
         "options": ["Healing a blind man", "Turning water into wine", "Walking on water", "Raising Lazarus"],
@@ -164,6 +167,8 @@ QUIZ_QUESTIONS = [
         "difficulty": "easy",
         "category": "new_testament"
     },
+    
+    # MEDIUM - Old Testament
     {
         "question": "Who was known as the 'friend of God'?",
         "options": ["Moses", "David", "Abraham", "Noah"],
@@ -284,6 +289,8 @@ QUIZ_QUESTIONS = [
         "difficulty": "medium",
         "category": "old_testament"
     },
+    
+    # MEDIUM - New Testament
     {
         "question": "Who wrote most of the New Testament letters?",
         "options": ["Peter", "John", "Paul", "James"],
@@ -302,7 +309,12 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What is the 'Golden Rule'?",
-        "options": ["Love your neighbor as yourself", "Do to others as you would have them do to you", "Honor your father and mother", "You shall not steal"],
+        "options": [
+            "Love your neighbor as yourself",
+            "Do to others as you would have them do to you",
+            "Honor your father and mother",
+            "You shall not steal"
+        ],
         "correct": 1,
         "reference": "Matthew 7:12",
         "difficulty": "medium",
@@ -326,7 +338,12 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What is the fruit of the Spirit?",
-        "options": ["Love, joy, peace, patience, kindness, goodness, faithfulness, gentleness, self-control", "Faith, hope, love", "Wisdom, understanding, knowledge", "Righteousness, holiness, purity"],
+        "options": [
+            "Love, joy, peace, patience, kindness, goodness, faithfulness, gentleness, self-control",
+            "Faith, hope, love",
+            "Wisdom, understanding, knowledge",
+            "Righteousness, holiness, purity"
+        ],
         "correct": 0,
         "reference": "Galatians 5:22-23",
         "difficulty": "medium",
@@ -404,6 +421,8 @@ QUIZ_QUESTIONS = [
         "difficulty": "medium",
         "category": "new_testament"
     },
+    
+    # MEDIUM - Bible Facts
     {
         "question": "What is the longest book in the Bible?",
         "options": ["Genesis", "Psalms", "Isaiah", "Revelation"],
@@ -428,6 +447,8 @@ QUIZ_QUESTIONS = [
         "difficulty": "medium",
         "category": "bible_facts"
     },
+    
+    # HARD - Old Testament
     {
         "question": "How many years did the Israelites wander in the wilderness?",
         "options": ["20 years", "30 years", "40 years", "50 years"],
@@ -548,6 +569,8 @@ QUIZ_QUESTIONS = [
         "difficulty": "hard",
         "category": "old_testament"
     },
+    
+    # HARD - New Testament
     {
         "question": "What was the name of the high priest who questioned Jesus?",
         "options": ["Annas", "Caiaphas", "Ananias", "Gamaliel"],
@@ -558,7 +581,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many times did Jesus appear to his disciples after his resurrection?",
-        "options": ["3 times", "5 times", "10 times", "6"],
+        "options": ["3 times", "5 times", "10 times", "Many times"],
         "correct": 3,
         "reference": "Various Gospels and Acts",
         "difficulty": "hard",
@@ -590,7 +613,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many people were baptized on the Day of Pentecost?",
-        "options": ["Approximately", "Approximately", "Approximately", "Approximately"],
+        "options": ["About 3,000", "About 5,000", "About 10,000", "About 1,000"],
         "correct": 0,
         "reference": "Acts 2:41",
         "difficulty": "hard",
@@ -606,8 +629,8 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "Who wrote the book of Hebrews?",
-        "options": ["Author is unknown (possibly Paul or another)", "Definitely Paul", "Definitely Luke", "Definitely Peter"],
-        "correct": 0,
+        "options": ["Paul", "Unknown", "Peter", "Luke"],
+        "correct": 1,
         "reference": "Hebrews (author unknown)",
         "difficulty": "hard",
         "category": "new_testament"
@@ -668,6 +691,8 @@ QUIZ_QUESTIONS = [
         "difficulty": "hard",
         "category": "new_testament"
     },
+    
+    # MORE EASY - Old Testament
     {
         "question": "What did God create on the fourth day?",
         "options": ["Animals", "Sun, moon, and stars", "Plants", "Man"],
@@ -732,6 +757,8 @@ QUIZ_QUESTIONS = [
         "difficulty": "easy",
         "category": "bible_facts"
     },
+    
+    # MORE EASY - New Testament
     {
         "question": "What was Jesus' occupation before he started preaching?",
         "options": ["Fisherman", "Carpenter", "Shepherd", "Tax collector"],
@@ -780,6 +807,8 @@ QUIZ_QUESTIONS = [
         "difficulty": "easy",
         "category": "new_testament"
     },
+    
+    # MORE MEDIUM - Old Testament
     {
         "question": "What was the name of the place where Jacob wrestled with God?",
         "options": ["Peniel", "Bethel", "Gilead", "Mizpah"],
@@ -860,10 +889,12 @@ QUIZ_QUESTIONS = [
         "difficulty": "medium",
         "category": "old_testament"
     },
+    
+    # MORE MEDIUM - New Testament
     {
         "question": "What was the name of the man who was raised from the dead by Jesus?",
-        "options": ["Lazarus", "Jairus' daughter", "The widow's son at Nain", "All three were raised"],
-        "correct": 0,
+        "options": ["Lazarus", "Jairus' daughter", "The widow's son", "All of the above"],
+        "correct": 3,
         "reference": "John 11:43-44, Mark 5:41-42, Luke 7:14-15",
         "difficulty": "medium",
         "category": "new_testament"
@@ -881,6 +912,14 @@ QUIZ_QUESTIONS = [
         "options": ["Matthew", "Zacchaeus", "Levi", "Simon"],
         "correct": 1,
         "reference": "Luke 19:2-4",
+        "difficulty": "medium",
+        "category": "new_testament"
+    },
+    {
+        "question": "How many times did Jesus appear to his disciples after his resurrection?",
+        "options": ["3 times", "5 times", "10 times", "Many times"],
+        "correct": 3,
+        "reference": "Various Gospels and Acts",
         "difficulty": "medium",
         "category": "new_testament"
     },
@@ -916,6 +955,8 @@ QUIZ_QUESTIONS = [
         "difficulty": "medium",
         "category": "new_testament"
     },
+    
+    # MORE HARD - Old Testament
     {
         "question": "What was the name of the king who had Daniel thrown into the lions' den?",
         "options": ["Nebuchadnezzar", "Belshazzar", "Darius", "Cyrus"],
@@ -996,6 +1037,90 @@ QUIZ_QUESTIONS = [
         "difficulty": "hard",
         "category": "old_testament"
     },
+    
+    # MORE HARD - New Testament
+    {
+        "question": "What was the name of the high priest who questioned Jesus?",
+        "options": ["Annas", "Caiaphas", "Ananias", "Gamaliel"],
+        "correct": 1,
+        "reference": "Matthew 26:57",
+        "difficulty": "hard",
+        "category": "new_testament"
+    },
+    {
+        "question": "How many times did Peter deny Jesus?",
+        "options": ["Once", "Twice", "Three times", "Four times"],
+        "correct": 2,
+        "reference": "Matthew 26:69-75",
+        "difficulty": "hard",
+        "category": "new_testament"
+    },
+    {
+        "question": "What was the name of the island where Paul was shipwrecked?",
+        "options": ["Cyprus", "Crete", "Malta", "Rhodes"],
+        "correct": 2,
+        "reference": "Acts 28:1",
+        "difficulty": "hard",
+        "category": "new_testament"
+    },
+    {
+        "question": "Who was the first Gentile convert mentioned in Acts?",
+        "options": ["Cornelius", "Lydia", "The Ethiopian eunuch", "Timothy"],
+        "correct": 0,
+        "reference": "Acts 10:1-48",
+        "difficulty": "hard",
+        "category": "new_testament"
+    },
+    {
+        "question": "What was the name of the disciple who replaced Judas?",
+        "options": ["Matthias", "Barnabas", "Silas", "Timothy"],
+        "correct": 0,
+        "reference": "Acts 1:26",
+        "difficulty": "hard",
+        "category": "new_testament"
+    },
+    {
+        "question": "How many people were baptized on the Day of Pentecost?",
+        "options": ["About 3,000", "About 5,000", "About 10,000", "About 1,000"],
+        "correct": 0,
+        "reference": "Acts 2:41",
+        "difficulty": "hard",
+        "category": "new_testament"
+    },
+    {
+        "question": "What was the name of the prison where Paul and Silas were imprisoned?",
+        "options": ["Philippi", "Corinth", "Ephesus", "Thessalonica"],
+        "correct": 0,
+        "reference": "Acts 16:23",
+        "difficulty": "hard",
+        "category": "new_testament"
+    },
+    {
+        "question": "Who wrote the book of Hebrews?",
+        "options": ["Paul", "Unknown", "Peter", "Luke"],
+        "correct": 1,
+        "reference": "Hebrews (author unknown)",
+        "difficulty": "hard",
+        "category": "new_testament"
+    },
+    {
+        "question": "What was the name of the man who was raised from the dead by Peter?",
+        "options": ["Lazarus", "Tabitha", "Eutychus", "Dorcas"],
+        "correct": 1,
+        "reference": "Acts 9:36-41",
+        "difficulty": "hard",
+        "category": "new_testament"
+    },
+    {
+        "question": "How many times is the word 'love' mentioned in 1 Corinthians 13?",
+        "options": ["7 times", "9 times", "13 times", "15 times"],
+        "correct": 1,
+        "reference": "1 Corinthians 13",
+        "difficulty": "hard",
+        "category": "new_testament"
+    },
+    
+    # EXPANDED COVERAGE - Minor Prophets
     {
         "question": "Which minor prophet's book is the shortest in the Old Testament?",
         "options": ["Obadiah", "Nahum", "Haggai", "Zephaniah"],
@@ -1052,6 +1177,8 @@ QUIZ_QUESTIONS = [
         "difficulty": "hard",
         "category": "old_testament"
     },
+    
+    # EXPANDED COVERAGE - Wisdom Literature
     {
         "question": "What is the main theme of the book of Ecclesiastes?",
         "options": ["Love", "Wisdom", "Everything is meaningless", "Prophecy"],
@@ -1086,7 +1213,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of Job's wife?",
-        "options": ["Sarah", "Rebekah", "Rachel", "David"],
+        "options": ["Not named in the Bible", "Sarah", "Rebekah", "Rachel"],
         "correct": 0,
         "reference": "Job 2:9",
         "difficulty": "hard",
@@ -1108,6 +1235,8 @@ QUIZ_QUESTIONS = [
         "difficulty": "hard",
         "category": "bible_facts"
     },
+    
+    # EXPANDED COVERAGE - Less-Known Books
     {
         "question": "Who was Ruth's husband?",
         "options": ["Boaz", "Mahlon", "Elimelek", "Obed"],
@@ -1142,12 +1271,14 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What did Ruth say to Naomi that became famous?",
-        "options": ["Where you go I will go", "Your people will be my people", "Your God will be my God", "All three statements"],
-        "correct": 0,
+        "options": ["Where you go I will go", "Your people will be my people", "Your God will be my God", "All of the above"],
+        "correct": 3,
         "reference": "Ruth 1:16-17",
         "difficulty": "medium",
         "category": "old_testament"
     },
+    
+    # EXPANDED COVERAGE - New Testament Epistles
     {
         "question": "What is the main theme of the book of Romans?",
         "options": ["Love", "Justification by faith", "The church", "End times"],
@@ -1158,7 +1289,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What is the fruit of the Spirit mentioned in Galatians?",
-        "options": ["Love, joy, peace, patience, kindness, goodness, faithfulness, gentleness, self-control", "Love, joy, peace", "Faith, hope, love", "Righteousness, holiness, purity"],
+        "options": ["Love, joy, peace, patience, kindness, goodness, faithfulness, gentleness, self-control", "Faith, hope, love", "Wisdom, understanding, knowledge", "Righteousness, holiness, purity"],
         "correct": 0,
         "reference": "Galatians 5:22-23",
         "difficulty": "medium",
@@ -1238,7 +1369,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What does 1 Peter say believers are?",
-        "options": ["A chosen people and royal priesthood", "Sinners saved by grace", "Children of God", "All three are true"],
+        "options": ["A chosen people, a royal priesthood", "Sinners saved by grace", "Children of God", "All of the above"],
         "correct": 0,
         "reference": "1 Peter 2:9",
         "difficulty": "hard",
@@ -1246,20 +1377,22 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "Which epistle warns about false teachers?",
-        "options": ["2 Peter", "Jude", "1 John", "All three warn about false teachers"],
-        "correct": 0,
+        "options": ["2 Peter", "Jude", "1 John", "All of the above"],
+        "correct": 3,
         "reference": "2 Peter 2:1, Jude 1:4, 1 John 4:1",
         "difficulty": "hard",
         "category": "new_testament"
     },
     {
         "question": "What does 1 John say God is?",
-        "options": ["Love", "Light", "Spirit", "All three are said"],
+        "options": ["Love", "Light", "Spirit", "All of the above"],
         "correct": 0,
         "reference": "1 John 4:8",
         "difficulty": "medium",
         "category": "new_testament"
     },
+    
+    # EXPANDED COVERAGE - Major Prophets (More Detail)
     {
         "question": "What did Isaiah see in his vision in chapter 6?",
         "options": ["The Lord seated on a throne", "A burning bush", "A wheel within a wheel", "A valley of dry bones"],
@@ -1278,16 +1411,16 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What did Ezekiel see in his vision?",
-        "options": ["A wheel within a wheel", "A valley of dry bones", "The glory of the Lord", "All three visions"],
-        "correct": 0,
+        "options": ["A wheel within a wheel", "A valley of dry bones", "The glory of the Lord", "All of the above"],
+        "correct": 3,
         "reference": "Ezekiel 1:16, 37:1, 1:28",
         "difficulty": "hard",
         "category": "old_testament"
     },
     {
         "question": "What did Isaiah prophesy about the Messiah?",
-        "options": ["He would be born of a virgin", "He would be called Immanuel", "He would be a suffering servant", "All three prophecies"],
-        "correct": 0,
+        "options": ["He would be born of a virgin", "He would be called Immanuel", "He would be a suffering servant", "All of the above"],
+        "correct": 3,
         "reference": "Isaiah 7:14, 9:6, 53:3-5",
         "difficulty": "medium",
         "category": "old_testament"
@@ -1300,6 +1433,8 @@ QUIZ_QUESTIONS = [
         "difficulty": "medium",
         "category": "old_testament"
     },
+    
+    # EXPANDED COVERAGE - Chronicles and Kings
     {
         "question": "How many times did the temple get destroyed?",
         "options": ["Once", "Twice", "Three times", "Never"],
@@ -1318,12 +1453,14 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What did King Hezekiah do when he was sick?",
-        "options": ["Prayed to God", "Asked Isaiah to pray", "Turned his face to the wall", "All three actions"],
-        "correct": 0,
+        "options": ["Prayed to God", "Asked Isaiah to pray", "Turned his face to the wall", "All of the above"],
+        "correct": 3,
         "reference": "2 Kings 20:2-3",
         "difficulty": "hard",
         "category": "old_testament"
     },
+    
+    # EXPANDED COVERAGE - More Bible Facts
     {
         "question": "What is the shortest book in the New Testament?",
         "options": ["2 John", "3 John", "Philemon", "Jude"],
@@ -1364,6 +1501,10 @@ QUIZ_QUESTIONS = [
         "difficulty": "medium",
         "category": "bible_facts"
     },
+    
+    # COMPLETE COVERAGE - Missing Old Testament Books
+    
+    # Leviticus
     {
         "question": "What is the main theme of the book of Leviticus?",
         "options": ["History", "Laws and sacrifices", "Prophecy", "Wisdom"],
@@ -1388,6 +1529,8 @@ QUIZ_QUESTIONS = [
         "difficulty": "easy",
         "category": "old_testament"
     },
+    
+    # Numbers
     {
         "question": "Why is the book of Numbers called 'Numbers'?",
         "options": ["It counts the Israelites", "It has many numbers in it", "It's about mathematics", "It counts the days"],
@@ -1412,6 +1555,8 @@ QUIZ_QUESTIONS = [
         "difficulty": "medium",
         "category": "old_testament"
     },
+    
+    # Deuteronomy
     {
         "question": "What does 'Deuteronomy' mean?",
         "options": ["Second law", "First law", "New law", "Old law"],
@@ -1436,6 +1581,8 @@ QUIZ_QUESTIONS = [
         "difficulty": "easy",
         "category": "old_testament"
     },
+    
+    # Joshua
     {
         "question": "What was Joshua's role after Moses died?",
         "options": ["Priest", "Judge", "Leader of Israel", "Prophet"],
@@ -1460,10 +1607,12 @@ QUIZ_QUESTIONS = [
         "difficulty": "medium",
         "category": "old_testament"
     },
+    
+    # Ezra
     {
         "question": "What did Ezra lead the people to do?",
-        "options": ["Rebuild the temple", "Return from exile", "Read the Law", "All three activities"],
-        "correct": 0,
+        "options": ["Rebuild the temple", "Return from exile", "Read the Law", "All of the above"],
+        "correct": 3,
         "reference": "Ezra 7:10, 3:8, 7:6",
         "difficulty": "medium",
         "category": "old_testament"
@@ -1484,6 +1633,8 @@ QUIZ_QUESTIONS = [
         "difficulty": "hard",
         "category": "old_testament"
     },
+    
+    # Nehemiah
     {
         "question": "What did Nehemiah rebuild?",
         "options": ["The temple", "The walls of Jerusalem", "The ark", "The tabernacle"],
@@ -1508,6 +1659,8 @@ QUIZ_QUESTIONS = [
         "difficulty": "hard",
         "category": "old_testament"
     },
+    
+    # 1 Chronicles
     {
         "question": "What does 1 Chronicles primarily contain?",
         "options": ["Prophecies", "Genealogies and history", "Laws", "Poetry"],
@@ -1524,6 +1677,8 @@ QUIZ_QUESTIONS = [
         "difficulty": "hard",
         "category": "old_testament"
     },
+    
+    # 2 Chronicles
     {
         "question": "What does 2 Chronicles focus on?",
         "options": ["The northern kingdom", "The southern kingdom of Judah", "The exile", "The return"],
@@ -1540,6 +1695,8 @@ QUIZ_QUESTIONS = [
         "difficulty": "hard",
         "category": "old_testament"
     },
+    
+    # Joel
     {
         "question": "What did Joel prophesy about?",
         "options": ["The Day of the Lord", "The exile", "The temple", "The flood"],
@@ -1556,6 +1713,8 @@ QUIZ_QUESTIONS = [
         "difficulty": "hard",
         "category": "old_testament"
     },
+    
+    # Amos
     {
         "question": "What was Amos's profession before he became a prophet?",
         "options": ["Priest", "Shepherd", "Farmer", "King"],
@@ -1580,6 +1739,8 @@ QUIZ_QUESTIONS = [
         "difficulty": "hard",
         "category": "old_testament"
     },
+    
+    # Micah
     {
         "question": "What did Micah prophesy about the birthplace of the Messiah?",
         "options": ["Jerusalem", "Nazareth", "Bethlehem", "Bethany"],
@@ -1596,6 +1757,10 @@ QUIZ_QUESTIONS = [
         "difficulty": "medium",
         "category": "old_testament"
     },
+    
+    # COMPLETE COVERAGE - Missing New Testament Books
+    
+    # 2 Corinthians
     {
         "question": "What is a main theme of 2 Corinthians?",
         "options": ["Paul's defense of his ministry", "The church", "End times", "Love"],
@@ -1612,6 +1777,8 @@ QUIZ_QUESTIONS = [
         "difficulty": "medium",
         "category": "new_testament"
     },
+    
+    # 2 Thessalonians
     {
         "question": "What is a main theme of 2 Thessalonians?",
         "options": ["The second coming of Christ", "Love", "Faith", "Hope"],
@@ -1628,6 +1795,8 @@ QUIZ_QUESTIONS = [
         "difficulty": "hard",
         "category": "new_testament"
     },
+    
+    # 1 Timothy
     {
         "question": "What is 1 Timothy primarily about?",
         "options": ["Church leadership", "The end times", "Love", "Faith"],
@@ -1652,6 +1821,8 @@ QUIZ_QUESTIONS = [
         "difficulty": "medium",
         "category": "new_testament"
     },
+    
+    # 2 Timothy
     {
         "question": "What is 2 Timothy known as?",
         "options": ["Paul's last letter", "His first letter", "A love letter", "A prophecy"],
@@ -1676,6 +1847,8 @@ QUIZ_QUESTIONS = [
         "difficulty": "easy",
         "category": "new_testament"
     },
+    
+    # Titus
     {
         "question": "What is the book of Titus about?",
         "options": ["Church organization", "End times", "Love", "Faith"],
@@ -1692,6 +1865,8 @@ QUIZ_QUESTIONS = [
         "difficulty": "hard",
         "category": "new_testament"
     },
+    
+    # 2 John
     {
         "question": "What is 2 John primarily about?",
         "options": ["Love and truth", "The end times", "Church leadership", "Money"],
@@ -1708,6 +1883,8 @@ QUIZ_QUESTIONS = [
         "difficulty": "hard",
         "category": "new_testament"
     },
+    
+    # More Psalms coverage
     {
         "question": "Who wrote 'The Lord is my shepherd'?",
         "options": ["Solomon", "David", "Moses", "Asaph"],
@@ -1732,6 +1909,104 @@ QUIZ_QUESTIONS = [
         "difficulty": "medium",
         "category": "old_testament"
     },
+    
+    # ADDITIONAL QUESTIONS - Easy
+    {
+        "question": "How many books are in the Old Testament?",
+        "options": ["27", "39", "66", "50"],
+        "correct": 1,
+        "reference": "Bible Facts",
+        "difficulty": "easy",
+        "category": "bible_facts"
+    },
+    {
+        "question": "How many books are in the New Testament?",
+        "options": ["27", "39", "66", "50"],
+        "correct": 0,
+        "reference": "Bible Facts",
+        "difficulty": "easy",
+        "category": "bible_facts"
+    },
+    {
+        "question": "What was the name of Moses' brother?",
+        "options": ["Aaron", "Joshua", "Caleb", "Samuel"],
+        "correct": 0,
+        "reference": "Exodus 4:14",
+        "difficulty": "easy",
+        "category": "old_testament"
+    },
+    {
+        "question": "Who was the mother of Jesus?",
+        "options": ["Mary", "Elizabeth", "Sarah", "Ruth"],
+        "correct": 0,
+        "reference": "Matthew 1:18",
+        "difficulty": "easy",
+        "category": "new_testament"
+    },
+    {
+        "question": "What was the name of the city where Jesus was born?",
+        "options": ["Nazareth", "Jerusalem", "Bethlehem", "Capernaum"],
+        "correct": 2,
+        "reference": "Luke 2:4-7",
+        "difficulty": "easy",
+        "category": "new_testament"
+    },
+    {
+        "question": "Who baptized Jesus?",
+        "options": ["Peter", "John the Baptist", "Paul", "Andrew"],
+        "correct": 1,
+        "reference": "Matthew 3:13-17",
+        "difficulty": "easy",
+        "category": "new_testament"
+    },
+    {
+        "question": "How many disciples did Jesus have?",
+        "options": ["10", "12", "15", "20"],
+        "correct": 1,
+        "reference": "Matthew 10:1-4",
+        "difficulty": "easy",
+        "category": "new_testament"
+    },
+    {
+        "question": "What did God create on the first day?",
+        "options": ["Animals", "Light", "Man", "Plants"],
+        "correct": 1,
+        "reference": "Genesis 1:3-5",
+        "difficulty": "easy",
+        "category": "old_testament"
+    },
+    {
+        "question": "Who was the father of Isaac?",
+        "options": ["Noah", "Abraham", "Jacob", "Moses"],
+        "correct": 1,
+        "reference": "Genesis 21:3",
+        "difficulty": "easy",
+        "category": "old_testament"
+    },
+    {
+        "question": "What is the last book of the Bible?",
+        "options": ["Jude", "Revelation", "3 John", "Malachi"],
+        "correct": 1,
+        "reference": "Revelation",
+        "difficulty": "easy",
+        "category": "bible_facts"
+    },
+    {
+        "question": "Who wrote most of the New Testament letters?",
+        "options": ["Peter", "John", "Paul", "James"],
+        "correct": 2,
+        "reference": "Bible Facts",
+        "difficulty": "easy",
+        "category": "bible_facts"
+    },
+    {
+        "question": "What was the name of the giant that David defeated?",
+        "options": ["Goliath", "Samson", "Saul", "Absalom"],
+        "correct": 0,
+        "reference": "1 Samuel 17:50",
+        "difficulty": "easy",
+        "category": "old_testament"
+    },
     {
         "question": "How many days was Jesus in the tomb?",
         "options": ["1 day", "2 days", "3 days", "7 days"],
@@ -1741,6 +2016,14 @@ QUIZ_QUESTIONS = [
         "category": "new_testament"
     },
     {
+        "question": "What is the first book of the New Testament?",
+        "options": ["Mark", "Matthew", "Luke", "John"],
+        "correct": 1,
+        "reference": "Matthew",
+        "difficulty": "easy",
+        "category": "bible_facts"
+    },
+    {
         "question": "Who was the first murderer mentioned in the Bible?",
         "options": ["Cain", "Abel", "Lamech", "Noah"],
         "correct": 0,
@@ -1748,6 +2031,8 @@ QUIZ_QUESTIONS = [
         "difficulty": "easy",
         "category": "old_testament"
     },
+    
+    # ADDITIONAL QUESTIONS - Medium
     {
         "question": "Which prophet was taken to heaven in a chariot of fire?",
         "options": ["Elijah", "Elisha", "Isaiah", "Jeremiah"],
@@ -1758,11 +2043,19 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of the river where Jesus was baptized?",
-        "options": ["Jordan River", "Nile River", "Euphrates River", "Tigris River"],
-        "correct": 0,
+        "options": ["Nile", "Jordan", "Euphrates", "Tigris"],
+        "correct": 1,
         "reference": "Matthew 3:13",
         "difficulty": "medium",
         "category": "new_testament"
+    },
+    {
+        "question": "How many plagues did God send to Egypt?",
+        "options": ["7", "10", "12", "40"],
+        "correct": 1,
+        "reference": "Exodus 7-12",
+        "difficulty": "medium",
+        "category": "old_testament"
     },
     {
         "question": "Who was the tax collector that climbed a tree to see Jesus?",
@@ -1771,6 +2064,14 @@ QUIZ_QUESTIONS = [
         "reference": "Luke 19:1-10",
         "difficulty": "medium",
         "category": "new_testament"
+    },
+    {
+        "question": "What was the name of the mountain where Moses received the Ten Commandments?",
+        "options": ["Mount Sinai", "Mount Zion", "Mount Carmel", "Mount Moriah"],
+        "correct": 0,
+        "reference": "Exodus 19:20",
+        "difficulty": "medium",
+        "category": "old_testament"
     },
     {
         "question": "Which book contains the story of the prodigal son?",
@@ -1785,6 +2086,22 @@ QUIZ_QUESTIONS = [
         "options": ["David", "Saul", "Solomon", "Rehoboam"],
         "correct": 1,
         "reference": "1 Samuel 10:1",
+        "difficulty": "medium",
+        "category": "old_testament"
+    },
+    {
+        "question": "What was the name of the garden where Jesus prayed before his arrest?",
+        "options": ["Garden of Eden", "Garden of Gethsemane", "Garden of Olives", "Garden of Paradise"],
+        "correct": 1,
+        "reference": "Matthew 26:36",
+        "difficulty": "medium",
+        "category": "new_testament"
+    },
+    {
+        "question": "How many years did the Israelites wander in the wilderness?",
+        "options": ["20 years", "30 years", "40 years", "50 years"],
+        "correct": 2,
+        "reference": "Numbers 14:33",
         "difficulty": "medium",
         "category": "old_testament"
     },
@@ -1829,12 +2146,30 @@ QUIZ_QUESTIONS = [
         "category": "new_testament"
     },
     {
+        "question": "How many chapters are in the book of Psalms?",
+        "options": ["100", "120", "150", "200"],
+        "correct": 2,
+        "reference": "Psalms",
+        "difficulty": "medium",
+        "category": "bible_facts"
+    },
+    
+    # ADDITIONAL QUESTIONS - Hard
+    {
         "question": "Which prophet had a vision of a valley of dry bones?",
         "options": ["Isaiah", "Jeremiah", "Ezekiel", "Daniel"],
         "correct": 2,
         "reference": "Ezekiel 37:1-14",
         "difficulty": "hard",
         "category": "old_testament"
+    },
+    {
+        "question": "What was the name of the high priest who questioned Jesus?",
+        "options": ["Annas", "Caiaphas", "Pilate", "Herod"],
+        "correct": 1,
+        "reference": "John 18:13-14",
+        "difficulty": "hard",
+        "category": "new_testament"
     },
     {
         "question": "Which king had a dream about a statue made of different metals?",
@@ -1845,12 +2180,36 @@ QUIZ_QUESTIONS = [
         "category": "old_testament"
     },
     {
+        "question": "What was the name of the place where Jesus was crucified?",
+        "options": ["Golgotha", "Gethsemane", "Calvary", "Both Golgotha and Calvary"],
+        "correct": 3,
+        "reference": "Matthew 27:33, Luke 23:33",
+        "difficulty": "hard",
+        "category": "new_testament"
+    },
+    {
+        "question": "How many times did Peter deny Jesus?",
+        "options": ["Two times", "Three times", "Four times", "Five times"],
+        "correct": 1,
+        "reference": "Matthew 26:69-75",
+        "difficulty": "hard",
+        "category": "new_testament"
+    },
+    {
         "question": "Which book contains the 'Sermon on the Mount'?",
         "options": ["Mark", "Luke", "Matthew", "All three"],
         "correct": 2,
         "reference": "Matthew 5-7",
         "difficulty": "hard",
         "category": "new_testament"
+    },
+    {
+        "question": "What was the name of the river that flowed through the Garden of Eden?",
+        "options": ["One river", "Two rivers", "Four rivers", "No river"],
+        "correct": 2,
+        "reference": "Genesis 2:10-14",
+        "difficulty": "hard",
+        "category": "old_testament"
     },
     {
         "question": "Who was the first Gentile to be baptized?",
@@ -1885,6 +2244,14 @@ QUIZ_QUESTIONS = [
         "category": "old_testament"
     },
     {
+        "question": "What was the name of Abraham's wife?",
+        "options": ["Sarah", "Rebecca", "Rachel", "Leah"],
+        "correct": 0,
+        "reference": "Genesis 17:15",
+        "difficulty": "easy",
+        "category": "old_testament"
+    },
+    {
         "question": "Who was Isaac's son?",
         "options": ["Jacob", "Esau", "Joseph", "Benjamin"],
         "correct": 0,
@@ -1897,6 +2264,14 @@ QUIZ_QUESTIONS = [
         "options": ["Israel", "Judah", "Joseph", "Benjamin"],
         "correct": 0,
         "reference": "Genesis 32:28",
+        "difficulty": "easy",
+        "category": "old_testament"
+    },
+    {
+        "question": "How many sons did Jacob have?",
+        "options": ["10", "12", "14", "16"],
+        "correct": 1,
+        "reference": "Genesis 35:22-26",
         "difficulty": "easy",
         "category": "old_testament"
     },
@@ -1921,6 +2296,14 @@ QUIZ_QUESTIONS = [
         "options": ["Manna", "Bread", "Fish", "Meat"],
         "correct": 0,
         "reference": "Exodus 16:15",
+        "difficulty": "easy",
+        "category": "old_testament"
+    },
+    {
+        "question": "Who was the first judge of Israel?",
+        "options": ["Othniel", "Ehud", "Deborah", "Gideon"],
+        "correct": 0,
+        "reference": "Judges 3:9",
         "difficulty": "easy",
         "category": "old_testament"
     },
@@ -1989,6 +2372,14 @@ QUIZ_QUESTIONS = [
         "category": "old_testament"
     },
     {
+        "question": "Who interpreted dreams for Pharaoh?",
+        "options": ["Joseph", "Daniel", "Moses", "Samuel"],
+        "correct": 0,
+        "reference": "Genesis 41:15",
+        "difficulty": "easy",
+        "category": "old_testament"
+    },
+    {
         "question": "What was the name of the sea that parted for Moses?",
         "options": ["Red Sea", "Dead Sea", "Mediterranean Sea", "Sea of Galilee"],
         "correct": 0,
@@ -2021,6 +2412,14 @@ QUIZ_QUESTIONS = [
         "category": "old_testament"
     },
     {
+        "question": "How many days and nights did it rain during the flood?",
+        "options": ["40", "30", "50", "60"],
+        "correct": 0,
+        "reference": "Genesis 7:12",
+        "difficulty": "easy",
+        "category": "old_testament"
+    },
+    {
         "question": "What sign did God give after the flood?",
         "options": ["Rainbow", "Dove", "Cloud", "Star"],
         "correct": 0,
@@ -2045,10 +2444,34 @@ QUIZ_QUESTIONS = [
         "category": "old_testament"
     },
     {
+        "question": "Who was sold into slavery by his brothers?",
+        "options": ["Joseph", "Benjamin", "Judah", "Reuben"],
+        "correct": 0,
+        "reference": "Genesis 37:28",
+        "difficulty": "easy",
+        "category": "old_testament"
+    },
+    {
+        "question": "What was the name of Moses' brother?",
+        "options": ["Aaron", "Miriam", "Joshua", "Caleb"],
+        "correct": 0,
+        "reference": "Exodus 4:14",
+        "difficulty": "easy",
+        "category": "old_testament"
+    },
+    {
         "question": "What was the name of the golden calf idol?",
         "options": ["The Golden Calf", "Baal", "Asherah", "Moloch"],
         "correct": 0,
         "reference": "Exodus 32:4",
+        "difficulty": "easy",
+        "category": "old_testament"
+    },
+    {
+        "question": "Who was the first high priest of Israel?",
+        "options": ["Aaron", "Moses", "Joshua", "Caleb"],
+        "correct": 0,
+        "reference": "Exodus 28:1",
         "difficulty": "easy",
         "category": "old_testament"
     },
@@ -2109,6 +2532,14 @@ QUIZ_QUESTIONS = [
         "category": "old_testament"
     },
     {
+        "question": "Who was the wisest king of Israel?",
+        "options": ["Solomon", "David", "Saul", "Rehoboam"],
+        "correct": 0,
+        "reference": "1 Kings 3:12",
+        "difficulty": "easy",
+        "category": "old_testament"
+    },
+    {
         "question": "What was built during Solomon's reign?",
         "options": ["The Temple", "The Palace", "The Wall", "The Tower"],
         "correct": 0,
@@ -2157,6 +2588,22 @@ QUIZ_QUESTIONS = [
         "category": "old_testament"
     },
     {
+        "question": "What was the name of Job's wife?",
+        "options": ["Not named", "Sarah", "Rebecca", "Rachel"],
+        "correct": 0,
+        "reference": "Job 2:9",
+        "difficulty": "easy",
+        "category": "old_testament"
+    },
+    {
+        "question": "Who wrote most of the Psalms?",
+        "options": ["David", "Solomon", "Asaph", "Moses"],
+        "correct": 0,
+        "reference": "Psalms",
+        "difficulty": "easy",
+        "category": "old_testament"
+    },
+    {
         "question": "What was the name of the first king of Israel?",
         "options": ["Saul", "David", "Solomon", "Rehoboam"],
         "correct": 0,
@@ -2189,10 +2636,58 @@ QUIZ_QUESTIONS = [
         "category": "old_testament"
     },
     {
+        "question": "Who was the mother of Jesus?",
+        "options": ["Mary", "Elizabeth", "Anna", "Martha"],
+        "correct": 0,
+        "reference": "Matthew 1:18",
+        "difficulty": "easy",
+        "category": "new_testament"
+    },
+    {
         "question": "Where was Jesus born?",
         "options": ["Bethlehem", "Nazareth", "Jerusalem", "Galilee"],
         "correct": 0,
         "reference": "Matthew 2:1",
+        "difficulty": "easy",
+        "category": "new_testament"
+    },
+    {
+        "question": "Who baptized Jesus?",
+        "options": ["John the Baptist", "Peter", "Andrew", "James"],
+        "correct": 0,
+        "reference": "Matthew 3:13",
+        "difficulty": "easy",
+        "category": "new_testament"
+    },
+    {
+        "question": "How many disciples did Jesus have?",
+        "options": ["12", "10", "7", "5"],
+        "correct": 0,
+        "reference": "Matthew 10:1",
+        "difficulty": "easy",
+        "category": "new_testament"
+    },
+    {
+        "question": "What was the first miracle Jesus performed?",
+        "options": ["Water to wine", "Healing the blind", "Raising Lazarus", "Feeding 5000"],
+        "correct": 0,
+        "reference": "John 2:11",
+        "difficulty": "easy",
+        "category": "new_testament"
+    },
+    {
+        "question": "Who denied Jesus three times?",
+        "options": ["Peter", "Judas", "Thomas", "John"],
+        "correct": 0,
+        "reference": "Matthew 26:75",
+        "difficulty": "easy",
+        "category": "new_testament"
+    },
+    {
+        "question": "Who betrayed Jesus?",
+        "options": ["Judas", "Peter", "Thomas", "Pilate"],
+        "correct": 0,
+        "reference": "Matthew 26:14",
         "difficulty": "easy",
         "category": "new_testament"
     },
@@ -2245,6 +2740,14 @@ QUIZ_QUESTIONS = [
         "category": "new_testament"
     },
     {
+        "question": "What was the name of the place where Jesus was crucified?",
+        "options": ["Golgotha", "Gethsemane", "Bethlehem", "Nazareth"],
+        "correct": 0,
+        "reference": "Matthew 27:33",
+        "difficulty": "easy",
+        "category": "new_testament"
+    },
+    {
         "question": "Who was the Roman governor who sentenced Jesus?",
         "options": ["Pilate", "Herod", "Caiaphas", "Festus"],
         "correct": 0,
@@ -2261,6 +2764,14 @@ QUIZ_QUESTIONS = [
         "category": "new_testament"
     },
     {
+        "question": "How many days was Jesus in the tomb?",
+        "options": ["3", "2", "4", "7"],
+        "correct": 0,
+        "reference": "Matthew 12:40",
+        "difficulty": "easy",
+        "category": "new_testament"
+    },
+    {
         "question": "Who was the first to see Jesus after resurrection?",
         "options": ["Mary Magdalene", "Peter", "Thomas", "John"],
         "correct": 0,
@@ -2269,10 +2780,26 @@ QUIZ_QUESTIONS = [
         "category": "new_testament"
     },
     {
+        "question": "What was the name of the disciple who replaced Judas?",
+        "options": ["Matthias", "Barnabas", "Silas", "Timothy"],
+        "correct": 0,
+        "reference": "Acts 1:26",
+        "difficulty": "easy",
+        "category": "new_testament"
+    },
+    {
         "question": "Who was the first Christian martyr?",
         "options": ["Stephen", "James", "Peter", "Paul"],
         "correct": 0,
         "reference": "Acts 7:59",
+        "difficulty": "easy",
+        "category": "new_testament"
+    },
+    {
+        "question": "Who wrote most of the New Testament letters?",
+        "options": ["Paul", "Peter", "John", "James"],
+        "correct": 0,
+        "reference": "New Testament",
         "difficulty": "easy",
         "category": "new_testament"
     },
@@ -2294,7 +2821,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of the church in Jerusalem?",
-        "options": ["The Church", "First Church", "Apostolic Church", "David"],
+        "options": ["The Church", "First Church", "Apostolic Church", "Not named"],
         "correct": 0,
         "reference": "Acts 2:47",
         "difficulty": "easy",
@@ -2349,8 +2876,32 @@ QUIZ_QUESTIONS = [
         "category": "new_testament"
     },
     {
+        "question": "How many books are in the New Testament?",
+        "options": ["27", "39", "66", "73"],
+        "correct": 0,
+        "reference": "Bible Facts",
+        "difficulty": "easy",
+        "category": "bible_facts"
+    },
+    {
+        "question": "How many books are in the Old Testament?",
+        "options": ["39", "27", "66", "73"],
+        "correct": 0,
+        "reference": "Bible Facts",
+        "difficulty": "easy",
+        "category": "bible_facts"
+    },
+    {
         "question": "What is the shortest book in the Bible?",
         "options": ["3 John", "2 John", "Jude", "Philemon"],
+        "correct": 0,
+        "reference": "Bible Facts",
+        "difficulty": "easy",
+        "category": "bible_facts"
+    },
+    {
+        "question": "What is the longest book in the Bible?",
+        "options": ["Psalms", "Genesis", "Isaiah", "Jeremiah"],
         "correct": 0,
         "reference": "Bible Facts",
         "difficulty": "easy",
@@ -2361,6 +2912,14 @@ QUIZ_QUESTIONS = [
         "options": ["66", "73", "39", "27"],
         "correct": 0,
         "reference": "Bible Facts",
+        "difficulty": "easy",
+        "category": "bible_facts"
+    },
+    {
+        "question": "What is the shortest verse in the Bible?",
+        "options": ["Jesus wept", "God is love", "Pray without ceasing", "Love one another"],
+        "correct": 0,
+        "reference": "John 11:35",
         "difficulty": "easy",
         "category": "bible_facts"
     },
@@ -2381,8 +2940,56 @@ QUIZ_QUESTIONS = [
         "category": "bible_facts"
     },
     {
+        "question": "What is the first book of the New Testament?",
+        "options": ["Matthew", "Mark", "Luke", "John"],
+        "correct": 0,
+        "reference": "Matthew 1:1",
+        "difficulty": "easy",
+        "category": "bible_facts"
+    },
+    {
+        "question": "What is the last book of the Bible?",
+        "options": ["Revelation", "Jude", "3 John", "2 Peter"],
+        "correct": 0,
+        "reference": "Revelation 22:21",
+        "difficulty": "easy",
+        "category": "bible_facts"
+    },
+    {
+        "question": "How many Gospels are in the New Testament?",
+        "options": ["4", "3", "5", "6"],
+        "correct": 0,
+        "reference": "Bible Facts",
+        "difficulty": "easy",
+        "category": "bible_facts"
+    },
+    {
         "question": "What are the first four books of the New Testament called?",
         "options": ["Gospels", "Epistles", "Prophets", "History"],
+        "correct": 0,
+        "reference": "Bible Facts",
+        "difficulty": "easy",
+        "category": "bible_facts"
+    },
+    {
+        "question": "How many letters did Paul write?",
+        "options": ["13", "12", "14", "15"],
+        "correct": 0,
+        "reference": "Bible Facts",
+        "difficulty": "easy",
+        "category": "bible_facts"
+    },
+    {
+        "question": "What is the longest chapter in the Bible?",
+        "options": ["Psalm 119", "Psalm 23", "Psalm 1", "Psalm 150"],
+        "correct": 0,
+        "reference": "Bible Facts",
+        "difficulty": "easy",
+        "category": "bible_facts"
+    },
+    {
+        "question": "What is the shortest chapter in the Bible?",
+        "options": ["Psalm 117", "Psalm 1", "Psalm 23", "Psalm 150"],
         "correct": 0,
         "reference": "Bible Facts",
         "difficulty": "easy",
@@ -2429,6 +3036,22 @@ QUIZ_QUESTIONS = [
         "category": "bible_facts"
     },
     {
+        "question": "What was the name of the mountain where Moses received the Ten Commandments?",
+        "options": ["Mount Sinai", "Mount Horeb", "Mount Zion", "Mount Moriah"],
+        "correct": 0,
+        "reference": "Exodus 19:20",
+        "difficulty": "medium",
+        "category": "old_testament"
+    },
+    {
+        "question": "How many years did the Israelites wander in the wilderness?",
+        "options": ["40", "30", "50", "60"],
+        "correct": 0,
+        "reference": "Numbers 14:33",
+        "difficulty": "medium",
+        "category": "old_testament"
+    },
+    {
         "question": "What was the name of the land God promised to Abraham?",
         "options": ["Canaan", "Egypt", "Babylon", "Assyria"],
         "correct": 0,
@@ -2437,10 +3060,26 @@ QUIZ_QUESTIONS = [
         "category": "old_testament"
     },
     {
+        "question": "Who was the first king of the united Israel?",
+        "options": ["Saul", "David", "Solomon", "Rehoboam"],
+        "correct": 0,
+        "reference": "1 Samuel 10:1",
+        "difficulty": "medium",
+        "category": "old_testament"
+    },
+    {
         "question": "What was the name of David's son who rebelled against him?",
         "options": ["Absalom", "Adonijah", "Amnon", "Solomon"],
         "correct": 0,
         "reference": "2 Samuel 15:10",
+        "difficulty": "medium",
+        "category": "old_testament"
+    },
+    {
+        "question": "How many years did Solomon reign?",
+        "options": ["40", "30", "50", "60"],
+        "correct": 0,
+        "reference": "1 Kings 11:42",
         "difficulty": "medium",
         "category": "old_testament"
     },
@@ -2481,6 +3120,14 @@ QUIZ_QUESTIONS = [
         "options": ["Nathan", "Samuel", "Gad", "Ahijah"],
         "correct": 0,
         "reference": "2 Samuel 12:1",
+        "difficulty": "medium",
+        "category": "old_testament"
+    },
+    {
+        "question": "What was the name of the valley where David fought Goliath?",
+        "options": ["Valley of Elah", "Valley of Jezreel", "Valley of Achor", "Valley of Rephaim"],
+        "correct": 0,
+        "reference": "1 Samuel 17:2",
         "difficulty": "medium",
         "category": "old_testament"
     },
@@ -2598,7 +3245,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "Who was the pharaoh during the Exodus?",
-        "options": ["Ramesses", "Thutmose", "Amenhotep", "David"],
+        "options": ["Not named", "Ramesses", "Thutmose", "Amenhotep"],
         "correct": 0,
         "reference": "Exodus 1:11",
         "difficulty": "medium",
@@ -2606,7 +3253,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of the place where the Israelites crossed the Red Sea?",
-        "options": ["Pi-hahiroth", "Baal-zephon", "Migdol", "David"],
+        "options": ["Not specified", "Pi-hahiroth", "Baal-zephon", "Migdol"],
         "correct": 0,
         "reference": "Exodus 14:2",
         "difficulty": "medium",
@@ -2662,7 +3309,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of Samson's first wife?",
-        "options": ["Delilah", "Tamar", "Ruth", "David"],
+        "options": ["Not named", "Delilah", "Tamar", "Ruth"],
         "correct": 0,
         "reference": "Judges 14:1",
         "difficulty": "medium",
@@ -2686,8 +3333,8 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How old was Samuel when he was dedicated to the Lord?",
-        "options": ["Very young (weaned)", "About 3 years old", "About 5 years old", "About 7 years old"],
-        "correct": 0,
+        "options": ["Young", "Not specified", "12", "8"],
+        "correct": 1,
         "reference": "1 Samuel 1:24",
         "difficulty": "medium",
         "category": "old_testament"
@@ -2726,8 +3373,8 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of the Jebusite stronghold David captured?",
-        "options": ["Zion", "Jerusalem", "City of David", "All three names refer to it"],
-        "correct": 0,
+        "options": ["Zion", "Jerusalem", "City of David", "All of the above"],
+        "correct": 3,
         "reference": "2 Samuel 5:7",
         "difficulty": "medium",
         "category": "old_testament"
@@ -2758,7 +3405,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of the wise woman from Tekoa?",
-        "options": ["Abigail", "Huldah", "Deborah", "David"],
+        "options": ["Not named", "Abigail", "Huldah", "Deborah"],
         "correct": 0,
         "reference": "2 Samuel 14:2",
         "difficulty": "medium",
@@ -2798,7 +3445,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How old was Jesus when he began his ministry?",
-        "options": ["Approximately", "25", "35", "40"],
+        "options": ["About 30", "25", "35", "40"],
         "correct": 0,
         "reference": "Luke 3:23",
         "difficulty": "medium",
@@ -2806,7 +3453,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of the mountain where Jesus gave the Sermon on the Mount?",
-        "options": ["Mount of Olives", "Mount Tabor", "Mount Hermon", "David"],
+        "options": ["Not specified", "Mount of Olives", "Mount Tabor", "Mount Hermon"],
         "correct": 0,
         "reference": "Matthew 5:1",
         "difficulty": "medium",
@@ -2830,7 +3477,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of the demon-possessed man in the region of the Gerasenes?",
-        "options": ["Legion", "Gadarene", "Demoniac", "David"],
+        "options": ["Legion", "Not named", "Gadarene", "Demoniac"],
         "correct": 0,
         "reference": "Mark 5:9",
         "difficulty": "medium",
@@ -2838,7 +3485,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many demons were in the man called Legion?",
-        "options": ["7", "12", "14", "17"],
+        "options": ["Many/2000", "7", "12", "Not specified"],
         "correct": 0,
         "reference": "Mark 5:13",
         "difficulty": "medium",
@@ -2846,9 +3493,25 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of the woman who anointed Jesus' feet?",
-        "options": ["Mary Magdalene", "Mary of Bethany", "Different women in different accounts", "David"],
+        "options": ["Not named in some accounts", "Mary Magdalene", "Mary of Bethany", "Different women in different accounts"],
         "correct": 3,
         "reference": "Luke 7:37",
+        "difficulty": "medium",
+        "category": "new_testament"
+    },
+    {
+        "question": "How many times did Peter deny Jesus?",
+        "options": ["3", "2", "4", "Once"],
+        "correct": 0,
+        "reference": "Matthew 26:75",
+        "difficulty": "medium",
+        "category": "new_testament"
+    },
+    {
+        "question": "What was the name of the high priest who questioned Jesus?",
+        "options": ["Caiaphas", "Annas", "Pilate", "Herod"],
+        "correct": 0,
+        "reference": "Matthew 26:57",
         "difficulty": "medium",
         "category": "new_testament"
     },
@@ -2862,8 +3525,8 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of the place where Jesus was buried?",
-        "options": ["Garden tomb", "Joseph's tomb", "New tomb", "All three names describe it"],
-        "correct": 0,
+        "options": ["Garden tomb", "Joseph's tomb", "New tomb", "All of the above"],
+        "correct": 3,
         "reference": "Matthew 27:60",
         "difficulty": "medium",
         "category": "new_testament"
@@ -2878,7 +3541,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many days after resurrection did Jesus appear to the disciples?",
-        "options": ["3", "7", "40", "6"],
+        "options": ["Various", "3", "7", "40"],
         "correct": 0,
         "reference": "John 20:19",
         "difficulty": "medium",
@@ -2886,7 +3549,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many days was Jesus on earth after resurrection?",
-        "options": ["40", "30", "50", "80"],
+        "options": ["40", "30", "50", "Not specified"],
         "correct": 0,
         "reference": "Acts 1:3",
         "difficulty": "medium",
@@ -2894,7 +3557,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many people were in the upper room on Pentecost?",
-        "options": ["Approximately", "12", "70", "500"],
+        "options": ["About 120", "12", "70", "500"],
         "correct": 0,
         "reference": "Acts 1:15",
         "difficulty": "medium",
@@ -2902,7 +3565,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many people were added on the day of Pentecost?",
-        "options": ["Approximately", "5000", "120", "6000"],
+        "options": ["About 3000", "5000", "120", "Not specified"],
         "correct": 0,
         "reference": "Acts 2:41",
         "difficulty": "medium",
@@ -2925,6 +3588,22 @@ QUIZ_QUESTIONS = [
         "category": "new_testament"
     },
     {
+        "question": "What was the name of the island where Paul was shipwrecked?",
+        "options": ["Malta", "Crete", "Cyprus", "Patmos"],
+        "correct": 0,
+        "reference": "Acts 28:1",
+        "difficulty": "medium",
+        "category": "new_testament"
+    },
+    {
+        "question": "How many missionary journeys did Paul take?",
+        "options": ["3", "2", "4", "5"],
+        "correct": 0,
+        "reference": "Acts 13-28",
+        "difficulty": "medium",
+        "category": "new_testament"
+    },
+    {
         "question": "What was the name of Paul's companion who was a doctor?",
         "options": ["Luke", "Timothy", "Titus", "Mark"],
         "correct": 0,
@@ -2933,8 +3612,16 @@ QUIZ_QUESTIONS = [
         "category": "new_testament"
     },
     {
+        "question": "How many letters did Paul write?",
+        "options": ["13", "12", "14", "15"],
+        "correct": 0,
+        "reference": "New Testament",
+        "difficulty": "medium",
+        "category": "new_testament"
+    },
+    {
         "question": "What was the name of the church that received the letter to the Hebrews?",
-        "options": ["Jerusalem", "Rome", "Alexandria", "David"],
+        "options": ["Unknown", "Jerusalem", "Rome", "Alexandria"],
         "correct": 0,
         "reference": "Hebrews",
         "difficulty": "medium",
@@ -2942,9 +3629,17 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many times is 'faith' mentioned in Hebrews 11?",
-        "options": ["Multiple times", "Once per person", "About 20 times", "Exactly 24 times"],
-        "correct": 0,
+        "options": ["Not counted", "Many times", "Once per person", "Varied"],
+        "correct": 1,
         "reference": "Hebrews 11",
+        "difficulty": "medium",
+        "category": "new_testament"
+    },
+    {
+        "question": "What was the name of the island where John was exiled?",
+        "options": ["Patmos", "Crete", "Cyprus", "Malta"],
+        "correct": 0,
+        "reference": "Revelation 1:9",
         "difficulty": "medium",
         "category": "new_testament"
     },
@@ -2958,7 +3653,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of the beast with 7 heads?",
-        "options": ["The Beast", "Antichrist", "The Dragon", "David"],
+        "options": ["Not named", "The Beast", "Antichrist", "The Dragon"],
         "correct": 0,
         "reference": "Revelation 13:1",
         "difficulty": "medium",
@@ -2974,7 +3669,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of the final battle?",
-        "options": ["Armageddon", "Gog and Magog", "The great day", "David"],
+        "options": ["Armageddon", "Gog and Magog", "The great day", "Not specifically named"],
         "correct": 0,
         "reference": "Revelation 16:16",
         "difficulty": "medium",
@@ -3110,7 +3805,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many miracles did Jesus perform?",
-        "options": ["37", "40", "50", "74"],
+        "options": ["Many/Not all recorded", "37", "40", "50"],
         "correct": 0,
         "reference": "Bible Facts",
         "difficulty": "medium",
@@ -3118,7 +3813,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What is the longest name in the Bible?",
-        "options": ["Maher-shalal-hash-baz", "Shear-jashub", "Methuselah", "Maher-shalal-hash-baz (Isaiah 8:1)"],
+        "options": ["Maher-shalal-hash-baz", "Shear-jashub", "Various long names", "Not specified"],
         "correct": 0,
         "reference": "Bible Facts",
         "difficulty": "medium",
@@ -3134,7 +3829,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What is the most common name in the Bible?",
-        "options": ["John", "James", "Joseph", "Zechariah"],
+        "options": ["Various", "John", "James", "Joseph"],
         "correct": 0,
         "reference": "Bible Facts",
         "difficulty": "medium",
@@ -3142,9 +3837,17 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of the river that flowed out of Eden and split into four?",
-        "options": ["One river", "Pishon, Gihon, Tigris, Euphrates", "Just Euphrates", "David"],
+        "options": ["One river", "Pishon, Gihon, Tigris, Euphrates", "Just Euphrates", "Not named"],
         "correct": 1,
         "reference": "Genesis 2:10-14",
+        "difficulty": "hard",
+        "category": "old_testament"
+    },
+    {
+        "question": "How many years did Methuselah live?",
+        "options": ["969", "930", "912", "950"],
+        "correct": 0,
+        "reference": "Genesis 5:27",
         "difficulty": "hard",
         "category": "old_testament"
     },
@@ -3165,6 +3868,14 @@ QUIZ_QUESTIONS = [
         "category": "old_testament"
     },
     {
+        "question": "What was the name of the place where Jacob wrestled with God?",
+        "options": ["Peniel", "Bethel", "Mahanaim", "Succoth"],
+        "correct": 0,
+        "reference": "Genesis 32:30",
+        "difficulty": "hard",
+        "category": "old_testament"
+    },
+    {
         "question": "How many years did Joseph serve in Egypt before his family came?",
         "options": ["13", "20", "30", "40"],
         "correct": 1,
@@ -3174,7 +3885,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of Moses' father-in-law?",
-        "options": ["Jethro/Reuel", "Hobab", "Raguel", "David"],
+        "options": ["Jethro/Reuel", "Hobab", "Raguel", "Various names"],
         "correct": 0,
         "reference": "Exodus 2:18",
         "difficulty": "hard",
@@ -3222,7 +3933,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of Balaam's donkey?",
-        "options": ["David", "Moses", "Abraham", "Paul"],
+        "options": ["Not named", "Various names in tradition", "No name given", "Unknown"],
         "correct": 0,
         "reference": "Numbers 22:21",
         "difficulty": "hard",
@@ -3246,7 +3957,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many years did the judges rule?",
-        "options": ["Approximately", "Approximately", "Approximately", "700"],
+        "options": ["About 350", "About 300", "About 400", "Not specified"],
         "correct": 0,
         "reference": "Judges",
         "difficulty": "hard",
@@ -3254,7 +3965,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of Gideon's alternative name?",
-        "options": ["Jerubbaal", "Gideon", "David", "Moses"],
+        "options": ["Jerubbaal", "Gideon", "Both used", "Not specified"],
         "correct": 2,
         "reference": "Judges 6:32",
         "difficulty": "hard",
@@ -3262,7 +3973,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many sons did Gideon have?",
-        "options": ["70 sons", "Many sons", "About 50 sons", "Not clearly stated"],
+        "options": ["70", "Many", "Not specified", "Various"],
         "correct": 0,
         "reference": "Judges 8:30",
         "difficulty": "hard",
@@ -3270,7 +3981,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of Jephthah's daughter?",
-        "options": ["David", "Moses", "Abraham", "Paul"],
+        "options": ["Not named", "Various in tradition", "No name", "Unknown"],
         "correct": 0,
         "reference": "Judges 11:34",
         "difficulty": "hard",
@@ -3278,7 +3989,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many years did Samson judge?",
-        "options": ["20", "40", "30", "40"],
+        "options": ["20", "40", "30", "Not specified"],
         "correct": 0,
         "reference": "Judges 15:20",
         "difficulty": "hard",
@@ -3286,7 +3997,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of the Philistine god Dagon's temple?",
-        "options": ["Dagon's temple", "David", "Moses", "Abraham"],
+        "options": ["Dagon's temple", "Not named", "Various", "Unknown"],
         "correct": 0,
         "reference": "Judges 16:23",
         "difficulty": "hard",
@@ -3294,7 +4005,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many years did Eli serve as judge?",
-        "options": ["40", "30", "50", "80"],
+        "options": ["40", "Not specified", "30", "50"],
         "correct": 0,
         "reference": "1 Samuel 4:18",
         "difficulty": "hard",
@@ -3310,7 +4021,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many years was the ark at Kiriath Jearim?",
-        "options": ["20", "7", "40", "40"],
+        "options": ["20", "7", "40", "Not specified"],
         "correct": 0,
         "reference": "1 Samuel 7:2",
         "difficulty": "hard",
@@ -3318,7 +4029,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of Saul's father?",
-        "options": ["Kish", "Ner", "Abiel", "David"],
+        "options": ["Kish", "Ner", "Abiel", "Various"],
         "correct": 0,
         "reference": "1 Samuel 9:1",
         "difficulty": "hard",
@@ -3326,7 +4037,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many years did Saul reign?",
-        "options": ["40", "20", "30", "80"],
+        "options": ["Not clearly stated", "40", "20", "30"],
         "correct": 0,
         "reference": "1 Samuel 13:1",
         "difficulty": "hard",
@@ -3334,7 +4045,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of the giant Goliath's brother?",
-        "options": ["Lahmi", "David", "Moses", "Abraham"],
+        "options": ["Not named", "Lahmi", "Various", "Unknown"],
         "correct": 0,
         "reference": "2 Samuel 21:19",
         "difficulty": "hard",
@@ -3342,7 +4053,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many times did David spare Saul's life?",
-        "options": ["2", "1", "3", "Several different answers"],
+        "options": ["2", "1", "3", "Multiple"],
         "correct": 0,
         "reference": "1 Samuel 24, 26",
         "difficulty": "hard",
@@ -3350,7 +4061,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of the wise woman from Abel?",
-        "options": ["David", "Moses", "Abraham", "Paul"],
+        "options": ["Not named", "Various", "Unknown", "No name"],
         "correct": 0,
         "reference": "2 Samuel 20:16",
         "difficulty": "hard",
@@ -3358,7 +4069,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many years did David reign total?",
-        "options": ["40", "33 in Jerusalem, 7.5 in Hebron", "30", "80"],
+        "options": ["40", "33 in Jerusalem, 7.5 in Hebron", "30", "Not specified"],
         "correct": 1,
         "reference": "2 Samuel 5:4-5",
         "difficulty": "hard",
@@ -3366,15 +4077,23 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of Solomon's mother?",
-        "options": ["Bathsheba", "Abishag", "David", "Moses"],
+        "options": ["Bathsheba", "Abishag", "Various", "Not specified"],
         "correct": 0,
         "reference": "1 Kings 1:11",
         "difficulty": "hard",
         "category": "old_testament"
     },
     {
+        "question": "How many years did Solomon reign?",
+        "options": ["40", "Not specified", "30", "50"],
+        "correct": 0,
+        "reference": "1 Kings 11:42",
+        "difficulty": "hard",
+        "category": "old_testament"
+    },
+    {
         "question": "What was the name of the queen of Sheba?",
-        "options": ["Bilqis", "David", "Moses", "Abraham"],
+        "options": ["Not named", "Various in tradition", "Bilqis", "Unknown"],
         "correct": 0,
         "reference": "1 Kings 10:1",
         "difficulty": "hard",
@@ -3382,7 +4101,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many proverbs did Solomon speak?",
-        "options": ["3000", "6000", "3010", "2995"],
+        "options": ["3000", "Not all recorded", "Many", "Various"],
         "correct": 0,
         "reference": "1 Kings 4:32",
         "difficulty": "hard",
@@ -3390,7 +4109,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of the prophet who anointed Jehu?",
-        "options": ["Elisha sent a prophet", "David", "Moses", "Abraham"],
+        "options": ["Elisha sent a prophet", "Not named", "Various", "Unknown"],
         "correct": 0,
         "reference": "2 Kings 9:1",
         "difficulty": "hard",
@@ -3398,7 +4117,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many years did Jehu reign?",
-        "options": ["28", "20", "30", "56"],
+        "options": ["28", "Not specified", "20", "30"],
         "correct": 0,
         "reference": "2 Kings 10:36",
         "difficulty": "hard",
@@ -3406,7 +4125,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of Hezekiah's father?",
-        "options": ["Ahaz", "Jotham", "Uzziah", "David"],
+        "options": ["Ahaz", "Jotham", "Uzziah", "Various"],
         "correct": 0,
         "reference": "2 Kings 18:1",
         "difficulty": "hard",
@@ -3414,7 +4133,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many years did Hezekiah reign?",
-        "options": ["29", "25", "30", "58"],
+        "options": ["29", "Not specified", "25", "30"],
         "correct": 0,
         "reference": "2 Kings 18:2",
         "difficulty": "hard",
@@ -3422,7 +4141,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of Josiah's father?",
-        "options": ["Amon", "Manasseh", "Hezekiah", "David"],
+        "options": ["Amon", "Manasseh", "Hezekiah", "Various"],
         "correct": 0,
         "reference": "2 Kings 21:26",
         "difficulty": "hard",
@@ -3430,7 +4149,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many years did Josiah reign?",
-        "options": ["31", "30", "40", "62"],
+        "options": ["31", "Not specified", "30", "40"],
         "correct": 0,
         "reference": "2 Kings 22:1",
         "difficulty": "hard",
@@ -3438,7 +4157,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of the last king of Judah?",
-        "options": ["Zedekiah", "Jehoiachin", "Jehoiakim", "David"],
+        "options": ["Zedekiah", "Jehoiachin", "Jehoiakim", "Various"],
         "correct": 0,
         "reference": "2 Kings 24:17",
         "difficulty": "hard",
@@ -3446,7 +4165,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many years was the Babylonian captivity?",
-        "options": ["70", "Approximately", "140", "80"],
+        "options": ["70", "Not exactly", "Various", "About 70"],
         "correct": 0,
         "reference": "Jeremiah 25:11",
         "difficulty": "hard",
@@ -3462,7 +4181,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many people returned with Zerubbabel?",
-        "options": ["Approximately", "42,360", "100000", "50010"],
+        "options": ["About 50,000", "42,360", "Various counts", "Not specified"],
         "correct": 1,
         "reference": "Ezra 2:64",
         "difficulty": "hard",
@@ -3470,7 +4189,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of Nehemiah's position?",
-        "options": ["Cupbearer to the king", "Governor of Judah", "High priest", "Prophet"],
+        "options": ["Cupbearer", "Governor", "Both", "Various"],
         "correct": 0,
         "reference": "Nehemiah 1:11",
         "difficulty": "hard",
@@ -3478,7 +4197,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many days did it take to rebuild the walls?",
-        "options": ["52", "104", "62", "47"],
+        "options": ["52", "Not specified", "Various", "About 2 months"],
         "correct": 0,
         "reference": "Nehemiah 6:15",
         "difficulty": "hard",
@@ -3486,7 +4205,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of Esther's Hebrew name?",
-        "options": ["Hadassah", "Esther", "Sarah", "Ruth"],
+        "options": ["Hadassah", "Esther", "Both", "Not specified"],
         "correct": 0,
         "reference": "Esther 2:7",
         "difficulty": "hard",
@@ -3494,7 +4213,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many provinces did Ahasuerus rule?",
-        "options": ["127", "120", "254", "137"],
+        "options": ["127", "120", "Not specified", "Various"],
         "correct": 0,
         "reference": "Esther 1:1",
         "difficulty": "hard",
@@ -3502,7 +4221,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of Daniel's Babylonian name?",
-        "options": ["Belteshazzar", "Daniel", "David", "Moses"],
+        "options": ["Belteshazzar", "Daniel", "Both used", "Various"],
         "correct": 2,
         "reference": "Daniel 1:7",
         "difficulty": "hard",
@@ -3510,7 +4229,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many years did Daniel serve?",
-        "options": ["70+", "140", "80", "65"],
+        "options": ["70+", "Various", "Not specified", "Long time"],
         "correct": 0,
         "reference": "Daniel 1:21",
         "difficulty": "hard",
@@ -3518,7 +4237,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of the census that brought Mary and Joseph to Bethlehem?",
-        "options": ["Quirinius census", "Augustus census", "David", "Moses"],
+        "options": ["Quirinius census", "Augustus census", "Not specifically named", "Various"],
         "correct": 0,
         "reference": "Luke 2:1",
         "difficulty": "hard",
@@ -3526,7 +4245,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many generations are listed in Matthew's genealogy?",
-        "options": ["42", "41", "40", "84"],
+        "options": ["42", "41", "40", "Various counts"],
         "correct": 0,
         "reference": "Matthew 1:17",
         "difficulty": "hard",
@@ -3534,7 +4253,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many generations are listed in Luke's genealogy?",
-        "options": ["77", "76", "75", "154"],
+        "options": ["77", "76", "75", "Various"],
         "correct": 0,
         "reference": "Luke 3:23-38",
         "difficulty": "hard",
@@ -3542,7 +4261,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of the place where Jesus was tempted?",
-        "options": ["Wilderness", "Judean desert", "David", "Moses"],
+        "options": ["Wilderness", "Not specifically named", "Judean desert", "Various"],
         "correct": 0,
         "reference": "Matthew 4:1",
         "difficulty": "hard",
@@ -3550,7 +4269,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many days was Jesus tempted?",
-        "options": ["40", "80", "50", "35"],
+        "options": ["40", "Not specified", "Various", "Long period"],
         "correct": 0,
         "reference": "Matthew 4:2",
         "difficulty": "hard",
@@ -3558,7 +4277,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of the mountain of transfiguration?",
-        "options": ["Hermon", "David", "Moses", "Abraham"],
+        "options": ["Not named", "Traditionally Tabor", "Hermon", "Various"],
         "correct": 0,
         "reference": "Matthew 17:1",
         "difficulty": "hard",
@@ -3566,15 +4285,15 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many people witnessed the transfiguration?",
-        "options": ["3 disciples (Peter, James, John)", "All 12 disciples", "2 disciples", "4 disciples"],
-        "correct": 0,
+        "options": ["3 disciples", "Peter, James, John", "Both correct", "Various"],
+        "correct": 2,
         "reference": "Matthew 17:1",
         "difficulty": "hard",
         "category": "new_testament"
     },
     {
         "question": "What was the name of the demon in the Gerasene demoniac?",
-        "options": ["Legion", "Beelzebub", "Satan", "Abaddon"],
+        "options": ["Legion", "Many demons", "Not one name", "Various"],
         "correct": 0,
         "reference": "Mark 5:9",
         "difficulty": "hard",
@@ -3582,7 +4301,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many pigs ran into the sea?",
-        "options": ["Approximately", "Large herd", "4000", "2010"],
+        "options": ["About 2000", "Not specified", "Many", "Large herd"],
         "correct": 0,
         "reference": "Mark 5:13",
         "difficulty": "hard",
@@ -3590,7 +4309,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of the woman with the issue of blood?",
-        "options": ["David", "Moses", "Abraham", "Paul"],
+        "options": ["Not named", "Various in tradition", "No name", "Unknown"],
         "correct": 0,
         "reference": "Mark 5:25",
         "difficulty": "hard",
@@ -3598,7 +4317,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many years did she have the issue?",
-        "options": ["12", "24", "22", "7"],
+        "options": ["12", "Not specified", "Many", "Long time"],
         "correct": 0,
         "reference": "Mark 5:25",
         "difficulty": "hard",
@@ -3606,7 +4325,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of Jairus' daughter?",
-        "options": ["David", "Moses", "Abraham", "Paul"],
+        "options": ["Not named", "Various", "Unknown", "No name"],
         "correct": 0,
         "reference": "Mark 5:22",
         "difficulty": "hard",
@@ -3614,7 +4333,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How old was she?",
-        "options": ["12", "Not mentioned in Scripture", "Not mentioned in Scripture", "Not mentioned in Scripture"],
+        "options": ["12", "Not specified", "Young", "Various"],
         "correct": 0,
         "reference": "Mark 5:42",
         "difficulty": "hard",
@@ -3622,15 +4341,15 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of the pool where the invalid was healed?",
-        "options": ["Bethesda", "Siloam", "Gihon", "Not specifically named"],
-        "correct": 0,
+        "options": ["Bethesda", "Bethzatha", "Both variants", "Not clearly"],
+        "correct": 2,
         "reference": "John 5:2",
         "difficulty": "hard",
         "category": "new_testament"
     },
     {
         "question": "How many years was the man at the pool?",
-        "options": ["38", "76", "48", "33"],
+        "options": ["38", "Not specified", "Many", "Long time"],
         "correct": 0,
         "reference": "John 5:5",
         "difficulty": "hard",
@@ -3638,7 +4357,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of Lazarus' sisters?",
-        "options": ["Mary and Martha", "Mary only", "Martha only", "Ruth and Naomi"],
+        "options": ["Mary and Martha", "Not both named", "Various", "Both"],
         "correct": 0,
         "reference": "John 11:1",
         "difficulty": "hard",
@@ -3646,7 +4365,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many days was Lazarus in the tomb?",
-        "options": ["4", "3", "A few", "8"],
+        "options": ["4", "3", "Not specified", "Several"],
         "correct": 0,
         "reference": "John 11:17",
         "difficulty": "hard",
@@ -3654,7 +4373,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of the high priest's servant whose ear was cut off?",
-        "options": ["Malchus", "David", "Moses", "Abraham"],
+        "options": ["Malchus", "Not named in all accounts", "Various", "Unknown"],
         "correct": 0,
         "reference": "John 18:10",
         "difficulty": "hard",
@@ -3662,7 +4381,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of the place where Jesus was tried?",
-        "options": ["Praetorium", "Pilate's court", "David", "Moses"],
+        "options": ["Praetorium", "Not specifically named", "Pilate's court", "Various"],
         "correct": 0,
         "reference": "John 18:28",
         "difficulty": "hard",
@@ -3670,39 +4389,39 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many languages was the inscription on the cross?",
-        "options": ["3 languages (Hebrew, Latin, Greek)", "2 languages", "4 languages", "1 language"],
-        "correct": 0,
+        "options": ["3", "Hebrew, Latin, Greek", "Both", "Various"],
+        "correct": 2,
         "reference": "John 19:20",
         "difficulty": "hard",
         "category": "new_testament"
     },
     {
         "question": "What was the name of the place of the skull?",
-        "options": ["Golgotha", "Gethsemane", "Calvary", "Both Golgotha and Calvary"],
-        "correct": 0,
+        "options": ["Golgotha", "Calvary", "Both names", "Not clearly"],
+        "correct": 2,
         "reference": "Matthew 27:33",
         "difficulty": "hard",
         "category": "new_testament"
     },
     {
         "question": "How many hours of darkness were there?",
-        "options": ["3 hours (noon to 3pm)", "6 hours", "1 hour", "12 hours"],
-        "correct": 0,
+        "options": ["3", "Noon to 3pm", "Both", "Various"],
+        "correct": 2,
         "reference": "Matthew 27:45",
         "difficulty": "hard",
         "category": "new_testament"
     },
     {
         "question": "What was the name of Joseph of Arimathea's role?",
-        "options": ["Council member and rich man", "Only council member", "Only rich man", "Pharisee"],
-        "correct": 0,
+        "options": ["Council member", "Rich man", "Both", "Various"],
+        "correct": 2,
         "reference": "Matthew 27:57",
         "difficulty": "hard",
         "category": "new_testament"
     },
     {
         "question": "How many women went to the tomb?",
-        "options": ["Mary Magdalene and others", "Accounts differ", "Several different answers", "Not mentioned in Scripture"],
+        "options": ["Various accounts", "Mary Magdalene and others", "Not consistent", "Multiple"],
         "correct": 1,
         "reference": "Matthew 28:1",
         "difficulty": "hard",
@@ -3710,7 +4429,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of the road to Emmaus?",
-        "options": ["Emmaus road", "David", "Moses", "Abraham"],
+        "options": ["Emmaus road", "Not named", "Various", "Unknown"],
         "correct": 0,
         "reference": "Luke 24:13",
         "difficulty": "hard",
@@ -3718,15 +4437,15 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many miles was Emmaus from Jerusalem?",
-        "options": ["Approximately", "Approximately", "Approximately", "Approximately"],
-        "correct": 0,
+        "options": ["About 7 miles", "60 stadia", "Both", "Not specified"],
+        "correct": 2,
         "reference": "Luke 24:13",
         "difficulty": "hard",
         "category": "new_testament"
     },
     {
         "question": "How many people saw Jesus after resurrection?",
-        "options": ["Over 500 people", "Approximately", "Approximately", "Only the disciples"],
+        "options": ["Over 500", "Many", "Various", "Not all recorded"],
         "correct": 0,
         "reference": "1 Corinthians 15:6",
         "difficulty": "hard",
@@ -3734,15 +4453,15 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of the place of ascension?",
-        "options": ["Mount of Olives (near Bethany)", "Mount Sinai", "Mount Zion", "Mount Tabor"],
-        "correct": 0,
+        "options": ["Mount of Olives", "Bethany", "Both", "Not clearly"],
+        "correct": 2,
         "reference": "Acts 1:12",
         "difficulty": "hard",
         "category": "new_testament"
     },
     {
         "question": "How many days after resurrection was the ascension?",
-        "options": ["40", "Approximately", "80", "50"],
+        "options": ["40", "Not specified", "Various", "About 40"],
         "correct": 0,
         "reference": "Acts 1:3",
         "difficulty": "hard",
@@ -3750,7 +4469,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What was the name of the replacement for Judas?",
-        "options": ["Matthias", "Justus", "Barnabas", "Silas"],
+        "options": ["Matthias", "Not clearly chosen", "Various", "Unknown"],
         "correct": 0,
         "reference": "Acts 1:26",
         "difficulty": "hard",
@@ -3758,7 +4477,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What is the exact number of words in the Bible?",
-        "options": ["Depends on the translation", "Exactly 783,000", "Approximately", "Less than 500,000"],
+        "options": ["Varies by translation", "Over 780,000 in KJV", "Various counts", "Not fixed"],
         "correct": 0,
         "reference": "Bible Facts",
         "difficulty": "hard",
@@ -3766,7 +4485,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What is the exact number of verses in the Bible?",
-        "options": ["31,102 in KJV", "Depends on the translation", "Approximately", "Not mentioned in the Bible"],
+        "options": ["31,102 in KJV", "Varies", "About 31,000", "Various"],
         "correct": 0,
         "reference": "Bible Facts",
         "difficulty": "hard",
@@ -3774,7 +4493,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What is the longest verse in the Bible?",
-        "options": ["Esther 8:9", "Psalm 119:1", "Genesis 1:1", "John 3:16"],
+        "options": ["Esther 8:9", "Various", "Long verse", "Not clearly"],
         "correct": 0,
         "reference": "Bible Facts",
         "difficulty": "hard",
@@ -3782,15 +4501,15 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What is the shortest verse in English?",
-        "options": ["John 11:35 (Jesus wept)", "John 3:16", "Matthew 5:3", "Psalm 23:1"],
-        "correct": 0,
+        "options": ["John 11:35", "Jesus wept", "Both", "Various"],
+        "correct": 2,
         "reference": "Bible Facts",
         "difficulty": "hard",
         "category": "bible_facts"
     },
     {
         "question": "What is the longest book by word count?",
-        "options": ["Jeremiah", "Psalms", "Genesis", "Not mentioned in the Bible"],
+        "options": ["Jeremiah", "Psalms", "Genesis", "Various"],
         "correct": 0,
         "reference": "Bible Facts",
         "difficulty": "hard",
@@ -3798,7 +4517,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What is the shortest book by word count?",
-        "options": ["3 John", "2 John", "Obadiah", "Not mentioned in the Bible"],
+        "options": ["3 John", "2 John", "Obadiah", "Various"],
         "correct": 0,
         "reference": "Bible Facts",
         "difficulty": "hard",
@@ -3806,7 +4525,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many times is God mentioned?",
-        "options": ["Over 4,000 times", "Approximately", "Approximately", "Less than 100 times"],
+        "options": ["Over 4400", "Various counts", "Many times", "Not fixed"],
         "correct": 0,
         "reference": "Bible Facts",
         "difficulty": "hard",
@@ -3814,7 +4533,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many times is love mentioned?",
-        "options": ["Over 300 times", "Approximately", "Approximately", "Less than 20 times"],
+        "options": ["Over 300", "Various", "Many", "Not fixed"],
         "correct": 0,
         "reference": "Bible Facts",
         "difficulty": "hard",
@@ -3822,7 +4541,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What is the most common word in the Bible?",
-        "options": ["Depends on the translation", "And/The", "Lord", "Not mentioned in the Bible"],
+        "options": ["Varies by language", "And/The", "Lord", "Various"],
         "correct": 0,
         "reference": "Bible Facts",
         "difficulty": "hard",
@@ -3830,7 +4549,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many languages has the Bible been translated into?",
-        "options": ["Over 3,000 languages", "Approximately", "Approximately", "Less than 100 languages"],
+        "options": ["Over 700", "Over 1000", "Various", "Many"],
         "correct": 0,
         "reference": "Bible Facts",
         "difficulty": "hard",
@@ -3838,7 +4557,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What is the oldest book in the Bible?",
-        "options": ["Job possibly", "Genesis", "Scholars debate this", "Not mentioned in the Bible"],
+        "options": ["Job possibly", "Genesis", "Various opinions", "Not certain"],
         "correct": 0,
         "reference": "Bible Facts",
         "difficulty": "hard",
@@ -3846,7 +4565,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What is the newest book in the Bible?",
-        "options": ["Revelation", "Last written", "Scholars debate this", "Not mentioned in the Bible"],
+        "options": ["Revelation", "Various", "Last written", "Not certain"],
         "correct": 0,
         "reference": "Bible Facts",
         "difficulty": "hard",
@@ -3854,7 +4573,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many years does the Bible span?",
-        "options": ["Over 4,000 years", "Approximately", "Approximately", "Less than 500 years"],
+        "options": ["Over 4000", "Various", "Long period", "Not fixed"],
         "correct": 0,
         "reference": "Bible Facts",
         "difficulty": "hard",
@@ -3862,7 +4581,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What percentage of the Bible is prophecy?",
-        "options": ["Approximately", "Approximately", "Approximately", "Less than 5%"],
+        "options": ["About 25%", "Various", "Significant", "Not fixed"],
         "correct": 0,
         "reference": "Bible Facts",
         "difficulty": "hard",
@@ -3870,7 +4589,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many authors wrote the Bible?",
-        "options": ["Approximately", "Exactly 66", "Approximately", "Over 100"],
+        "options": ["About 40", "Various", "Many", "Not fixed"],
         "correct": 0,
         "reference": "Bible Facts",
         "difficulty": "hard",
@@ -3878,23 +4597,23 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What is the longest chapter by verses?",
-        "options": ["Psalm 119", "Psalm 117", "Psalm 23", "Psalm 51"],
-        "correct": 0,
+        "options": ["Psalm 119", "176 verses", "Both", "Various"],
+        "correct": 2,
         "reference": "Bible Facts",
         "difficulty": "hard",
         "category": "bible_facts"
     },
     {
         "question": "What is the shortest chapter by verses?",
-        "options": ["Psalm 117", "Psalm 119", "Psalm 23", "Psalm 1"],
-        "correct": 0,
+        "options": ["Psalm 117", "2 verses", "Both", "Various"],
+        "correct": 2,
         "reference": "Bible Facts",
         "difficulty": "hard",
         "category": "bible_facts"
     },
     {
         "question": "How many books mention Jesus?",
-        "options": ["All NT books, some OT books", "Only the Gospels", "Only New Testament", "None of the Old Testament"],
+        "options": ["All NT, some OT", "Various", "Many", "Not fixed"],
         "correct": 0,
         "reference": "Bible Facts",
         "difficulty": "hard",
@@ -3902,7 +4621,7 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "What is the center chapter of the Bible?",
-        "options": ["Psalm 117", "Psalm 118", "Psalm 119", "There is no exact center"],
+        "options": ["Psalm 117", "Various", "Middle point", "Not clearly"],
         "correct": 0,
         "reference": "Bible Facts",
         "difficulty": "hard",
@@ -3910,396 +4629,12 @@ QUIZ_QUESTIONS = [
     },
     {
         "question": "How many times is the word 'and' used?",
-        "options": ["Over 46,000 times in KJV", "Approximately", "Less than 5,000 times", "Exactly 50,000 times"],
+        "options": ["Over 46,000 in KJV", "Various", "Many", "Not fixed"],
         "correct": 0,
         "reference": "Bible Facts",
         "difficulty": "hard",
         "category": "bible_facts"
     },
-    {
-        "question": "What was the name of Ruth's mother-in-law?",
-        "options": ["Naomi", "Sarah", "Rebekah", "Leah"],
-        "correct": 0,
-        "reference": "Ruth 1:2",
-        "difficulty": "easy",
-        "category": "old_testament"
-    },
-    {
-        "question": "Who was the judge who had long hair as a sign of his vow?",
-        "options": ["Gideon", "Samson", "Deborah", "Jephthah"],
-        "correct": 1,
-        "reference": "Judges 16:17",
-        "difficulty": "easy",
-        "category": "old_testament"
-    },
-    {
-        "question": "What did God provide to the Israelites in the wilderness for food?",
-        "options": ["Manna", "Bread", "Fish", "Fruit"],
-        "correct": 0,
-        "reference": "Exodus 16:15",
-        "difficulty": "easy",
-        "category": "old_testament"
-    },
-    {
-        "question": "Who was the first woman mentioned in the Bible?",
-        "options": ["Sarah", "Eve", "Rebekah", "Leah"],
-        "correct": 1,
-        "reference": "Genesis 2:22",
-        "difficulty": "easy",
-        "category": "old_testament"
-    },
-    {
-        "question": "What was the name of the tower people tried to build to reach heaven?",
-        "options": ["Tower of Babel", "Tower of Babylon", "Tower of Shinar", "Tower of Jericho"],
-        "correct": 0,
-        "reference": "Genesis 11:4",
-        "difficulty": "easy",
-        "category": "old_testament"
-    },
-    {
-        "question": "Who was the father of John the Baptist?",
-        "options": ["Zechariah", "Joseph", "Simeon", "Eli"],
-        "correct": 0,
-        "reference": "Luke 1:5",
-        "difficulty": "easy",
-        "category": "new_testament"
-    },
-    {
-        "question": "What did Jesus say is the greatest commandment?",
-        "options": ["Love God and love your neighbor", "Do not kill", "Keep the Sabbath", "Honor your parents"],
-        "correct": 0,
-        "reference": "Matthew 22:37-39",
-        "difficulty": "easy",
-        "category": "new_testament"
-    },
-    {
-        "question": "How many wise men visited Jesus?",
-        "options": ["Three", "Four", "Twelve", "The Bible doesn't specify the number"],
-        "correct": 3,
-        "reference": "Matthew 2:1",
-        "difficulty": "easy",
-        "category": "new_testament"
-    },
-    {
-        "question": "What is the second book of the Bible?",
-        "options": ["Genesis", "Exodus", "Leviticus", "Numbers"],
-        "correct": 1,
-        "reference": "Exodus",
-        "difficulty": "easy",
-        "category": "bible_facts"
-    },
-    {
-        "question": "How many books are in the entire Bible?",
-        "options": ["66", "73", "80", "50"],
-        "correct": 0,
-        "reference": "Bible Facts",
-        "difficulty": "easy",
-        "category": "bible_facts"
-    },
-    {
-        "question": "Who was the prophet that anointed both Saul and David as kings?",
-        "options": ["Nathan", "Samuel", "Elijah", "Elisha"],
-        "correct": 1,
-        "reference": "1 Samuel 10:1, 16:13",
-        "difficulty": "medium",
-        "category": "old_testament"
-    },
-    {
-        "question": "What was the name of the place where Jacob had his dream of a ladder to heaven?",
-        "options": ["Bethel", "Peniel", "Gilead", "Mizpah"],
-        "correct": 0,
-        "reference": "Genesis 28:19",
-        "difficulty": "medium",
-        "category": "old_testament"
-    },
-    {
-        "question": "Who was the king that had the handwriting on the wall interpreted by Daniel?",
-        "options": ["Nebuchadnezzar", "Belshazzar", "Darius", "Cyrus"],
-        "correct": 1,
-        "reference": "Daniel 5:5",
-        "difficulty": "medium",
-        "category": "old_testament"
-    },
-    {
-        "question": "What was the name of the river where Naaman was told to wash seven times?",
-        "options": ["Jordan River", "Nile River", "Euphrates River", "Tigris River"],
-        "correct": 0,
-        "reference": "2 Kings 5:10",
-        "difficulty": "medium",
-        "category": "old_testament"
-    },
-    {
-        "question": "Who was the queen who saved her people from destruction?",
-        "options": ["Esther", "Jezebel", "Bathsheba", "Abigail"],
-        "correct": 0,
-        "reference": "Esther 4:16",
-        "difficulty": "medium",
-        "category": "old_testament"
-    },
-    {
-        "question": "What was the name of the prophet who was thrown into a well?",
-        "options": ["Jeremiah", "Isaiah", "Ezekiel", "Daniel"],
-        "correct": 0,
-        "reference": "Jeremiah 38:6",
-        "difficulty": "medium",
-        "category": "old_testament"
-    },
-    {
-        "question": "Who was the disciple that Jesus called 'the Rock'?",
-        "options": ["Peter", "John", "James", "Andrew"],
-        "correct": 0,
-        "reference": "Matthew 16:18",
-        "difficulty": "medium",
-        "category": "new_testament"
-    },
-    {
-        "question": "What was the name of the tax collector who climbed a tree to see Jesus?",
-        "options": ["Zacchaeus", "Matthew", "Levi", "Simon"],
-        "correct": 0,
-        "reference": "Luke 19:2-4",
-        "difficulty": "medium",
-        "category": "new_testament"
-    },
-    {
-        "question": "How many people were fed with 5 loaves and 2 fish?",
-        "options": ["5000 men", "5000+ including women and children", "4000", "3000"],
-        "correct": 1,
-        "reference": "Matthew 14:21",
-        "difficulty": "medium",
-        "category": "new_testament"
-    },
-    {
-        "question": "What was the name of the man who was raised from the dead by Jesus after four days?",
-        "options": ["Lazarus", "Jairus' daughter", "The widow's son", "Eutychus"],
-        "correct": 0,
-        "reference": "John 11:43-44",
-        "difficulty": "medium",
-        "category": "new_testament"
-    },
-    {
-        "question": "What is the longest book in the New Testament?",
-        "options": ["Luke", "Acts", "Matthew", "Revelation"],
-        "correct": 0,
-        "reference": "Bible Facts",
-        "difficulty": "medium",
-        "category": "bible_facts"
-    },
-    {
-        "question": "What is the shortest book in the New Testament?",
-        "options": ["2 John", "3 John", "Philemon", "Jude"],
-        "correct": 1,
-        "reference": "Bible Facts",
-        "difficulty": "medium",
-        "category": "bible_facts"
-    },
-    {
-        "question": "Who was the prophet that was taken to heaven in a whirlwind?",
-        "options": ["Elisha", "Elijah", "Enoch", "Moses"],
-        "correct": 1,
-        "reference": "2 Kings 2:11",
-        "difficulty": "hard",
-        "category": "old_testament"
-    },
-    {
-        "question": "What was the name of the valley where the dry bones came to life?",
-        "options": ["Valley of Dry Bones", "Valley of the Shadow of Death", "Kidron Valley", "Valley of Jehoshaphat"],
-        "correct": 0,
-        "reference": "Ezekiel 37:1-2",
-        "difficulty": "hard",
-        "category": "old_testament"
-    },
-    {
-        "question": "Who was the judge that made a foolish vow about his daughter?",
-        "options": ["Gideon", "Jephthah", "Samson", "Barak"],
-        "correct": 1,
-        "reference": "Judges 11:30-31",
-        "difficulty": "hard",
-        "category": "old_testament"
-    },
-    {
-        "question": "What was the name of the mountain where Abraham was told to sacrifice Isaac?",
-        "options": ["Mount Moriah", "Mount Sinai", "Mount Carmel", "Mount Zion"],
-        "correct": 0,
-        "reference": "Genesis 22:2",
-        "difficulty": "hard",
-        "category": "old_testament"
-    },
-    {
-        "question": "Who was the king that found the Book of the Law in the temple?",
-        "options": ["Josiah", "Hezekiah", "Jehoshaphat", "Asa"],
-        "correct": 0,
-        "reference": "2 Kings 22:8",
-        "difficulty": "hard",
-        "category": "old_testament"
-    },
-    {
-        "question": "What was the name of the prophet who married a prostitute as a sign?",
-        "options": ["Hosea", "Amos", "Micah", "Nahum"],
-        "correct": 0,
-        "reference": "Hosea 1:2",
-        "difficulty": "hard",
-        "category": "old_testament"
-    },
-    {
-        "question": "Who was the first Gentile to receive the Holy Spirit?",
-        "options": ["Cornelius", "The Ethiopian eunuch", "Lydia", "The Philippian jailer"],
-        "correct": 0,
-        "reference": "Acts 10:44-45",
-        "difficulty": "hard",
-        "category": "new_testament"
-    },
-    {
-        "question": "What was the name of the island where John was exiled?",
-        "options": ["Patmos", "Cyprus", "Crete", "Malta"],
-        "correct": 0,
-        "reference": "Revelation 1:9",
-        "difficulty": "hard",
-        "category": "new_testament"
-    },
-    {
-        "question": "How many missionary journeys did the apostle Paul take?",
-        "options": ["Three", "Four", "Two", "Five"],
-        "correct": 0,
-        "reference": "Acts 13-21",
-        "difficulty": "hard",
-        "category": "new_testament"
-    },
-    {
-        "question": "What was the name of the place where Paul was shipwrecked?",
-        "options": ["Malta", "Cyprus", "Crete", "Rhodes"],
-        "correct": 0,
-        "reference": "Acts 28:1",
-        "difficulty": "hard",
-        "category": "new_testament"
-    },
-    {
-        "question": "What is the longest verse in the Bible?",
-        "options": ["Esther 8:9", "Psalm 119:1", "Genesis 1:1", "John 3:16"],
-        "correct": 0,
-        "reference": "Bible Facts",
-        "difficulty": "hard",
-        "category": "bible_facts"
-    },
-    {
-        "question": "What is the shortest verse in English?",
-        "options": ["John 11:35 (Jesus wept)", "John 3:16", "Matthew 5:3", "Psalm 23:1"],
-        "correct": 0,
-        "reference": "Bible Facts",
-        "difficulty": "hard",
-        "category": "bible_facts"
-    },
-    {
-        "question": "How many times is the word 'love' mentioned in the Bible?",
-        "options": ["Over 300 times", "Approximately", "Approximately", "Less than 20 times"],
-        "correct": 0,
-        "reference": "Bible Facts",
-        "difficulty": "hard",
-        "category": "bible_facts"
-    },
-    {
-        "question": "How many languages has the Bible been translated into?",
-        "options": ["Over 3,000 languages", "Approximately", "Approximately", "Less than 100 languages"],
-        "correct": 0,
-        "reference": "Bible Facts",
-        "difficulty": "hard",
-        "category": "bible_facts"
-    },
-    {
-        "question": "What was the name of the first murderer in the Bible?",
-        "options": ["Cain", "Abel", "Lamech", "Enoch"],
-        "correct": 0,
-        "reference": "Genesis 4:8",
-        "difficulty": "easy",
-        "category": "old_testament"
-    },
-    {
-        "question": "Who was thrown into a fiery furnace?",
-        "options": ["Shadrach, Meshach, and Abednego", "Daniel", "David", "Moses"],
-        "correct": 0,
-        "reference": "Daniel 3:21",
-        "difficulty": "easy",
-        "category": "old_testament"
-    },
-    {
-        "question": "What was the name of the sea where Jesus walked on water?",
-        "options": ["Sea of Galilee", "Red Sea", "Dead Sea", "Mediterranean Sea"],
-        "correct": 0,
-        "reference": "Matthew 14:25",
-        "difficulty": "easy",
-        "category": "new_testament"
-    },
-    {
-        "question": "Who was the first disciple Jesus called?",
-        "options": ["Peter", "Andrew", "John", "James"],
-        "correct": 1,
-        "reference": "John 1:40",
-        "difficulty": "easy",
-        "category": "new_testament"
-    },
-    {
-        "question": "What is the third book of the Bible?",
-        "options": ["Exodus", "Leviticus", "Numbers", "Deuteronomy"],
-        "correct": 1,
-        "reference": "Leviticus",
-        "difficulty": "easy",
-        "category": "bible_facts"
-    },
-    {
-        "question": "Who was the prophet that confronted King Ahab about Naboth's vineyard?",
-        "options": ["Elijah", "Elisha", "Micaiah", "Nathan"],
-        "correct": 0,
-        "reference": "1 Kings 21:17",
-        "difficulty": "medium",
-        "category": "old_testament"
-    },
-    {
-        "question": "What was the name of the woman who anointed Jesus' feet with expensive perfume?",
-        "options": ["Mary of Bethany", "Mary Magdalene", "A sinful woman", "Possibly different women in different accounts"],
-        "correct": 0,
-        "reference": "Luke 7:37-38, John 12:3",
-        "difficulty": "medium",
-        "category": "new_testament"
-    },
-    {
-        "question": "How many times did Jesus predict his death and resurrection?",
-        "options": ["Three times", "Four times", "Once", "Twice"],
-        "correct": 0,
-        "reference": "Matthew 16:21, 17:22-23, 20:17-19",
-        "difficulty": "medium",
-        "category": "new_testament"
-    },
-    {
-        "question": "What is the middle book of the Bible?",
-        "options": ["Psalms", "Proverbs", "Job", "Ecclesiastes"],
-        "correct": 0,
-        "reference": "Bible Facts",
-        "difficulty": "medium",
-        "category": "bible_facts"
-    },
-    {
-        "question": "Who was the prophet that was fed by ravens?",
-        "options": ["Elijah", "Elisha", "Isaiah", "Jeremiah"],
-        "correct": 0,
-        "reference": "1 Kings 17:6",
-        "difficulty": "hard",
-        "category": "old_testament"
-    },
-    {
-        "question": "What was the name of the high priest who questioned Jesus?",
-        "options": ["Caiaphas", "Annas", "Pilate", "Herod"],
-        "correct": 0,
-        "reference": "Matthew 26:57",
-        "difficulty": "hard",
-        "category": "new_testament"
-    },
-    {
-        "question": "How many times is God mentioned in the Bible?",
-        "options": ["Over 4,000 times", "Approximately", "Approximately", "Less than 100 times"],
-        "correct": 0,
-        "reference": "Bible Facts",
-        "difficulty": "hard",
-        "category": "bible_facts"
-    }
 ]
 
 # Categories
@@ -4358,3 +4693,37 @@ def get_question_index(question):
         return QUIZ_QUESTIONS.index(question)
     except ValueError:
         return None
+
+def get_question_by_index(index):
+    """Get a question by its index"""
+    if 0 <= index < len(QUIZ_QUESTIONS):
+        return QUIZ_QUESTIONS[index]
+    return None
+
+def get_total_questions():
+    """Get total number of questions"""
+    return len(QUIZ_QUESTIONS)
+
+def get_questions_by_difficulty(difficulty):
+    """Get all questions of a specific difficulty"""
+    return [q for q in QUIZ_QUESTIONS if q.get('difficulty') == difficulty]
+
+def get_questions_by_category(category):
+    """Get all questions of a specific category"""
+    return [q for q in QUIZ_QUESTIONS if q.get('category') == category]
+
+def get_stats():
+    """Get statistics about the question database"""
+    stats = {
+        'total': len(QUIZ_QUESTIONS),
+        'by_difficulty': {},
+        'by_category': {}
+    }
+    
+    for difficulty in DIFFICULTIES:
+        stats['by_difficulty'][difficulty] = len(get_questions_by_difficulty(difficulty))
+    
+    for category in CATEGORIES.keys():
+        stats['by_category'][category] = len(get_questions_by_category(category))
+    
+    return stats
