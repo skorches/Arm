@@ -1300,6 +1300,89 @@ Keep learning! Use /quiz to take another quiz."""
             await update.message.reply_text(message, parse_mode='Markdown')
             return
         
+        # Check for daily challenge date queries
+        daily_challenge_patterns = [
+            r'daily\s+challenge.*?(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})',  # date format
+            r'challenge.*?(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})',  # challenge with date
+            r'daily.*?(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})',  # daily with date
+            r'(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}).*?challenge',  # date then challenge
+            r'(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}).*?daily',  # date then daily
+        ]
+        
+        for pattern in daily_challenge_patterns:
+            match = re.search(pattern, text_lower)
+            if match:
+                date_str = match.group(1)
+                try:
+                    # Try to parse the date
+                    from datetime import datetime
+                    # Handle different date formats
+                    date_formats = ['%m/%d/%Y', '%m-%d-%Y', '%d/%m/%Y', '%d-%m-%Y', '%Y/%m/%d', '%Y-%m-%d']
+                    parsed_date = None
+                    for fmt in date_formats:
+                        try:
+                            parsed_date = datetime.strptime(date_str, fmt).date()
+                            break
+                        except ValueError:
+                            continue
+                    
+                    if parsed_date:
+                        from daily_quiz import get_quiz_question_for_date
+                        question = get_quiz_question_for_date(parsed_date)
+                        
+                        if question:
+                            response = f"📅 *Daily Challenge for {parsed_date.strftime('%B %d, %Y')}*\n\n"
+                            response += f"*Question:*\n{question['question']}\n\n"
+                            response += "*Options:*\n"
+                            for i, opt in enumerate(question['options'], 1):
+                                response += f"{i}. {opt}\n"
+                            response += f"\n*Correct Answer:* {question['options'][question['correct']]}\n"
+                            response += f"*Reference:* {question['reference']}"
+                            
+                            await update.message.reply_text(response, parse_mode='Markdown')
+                            return
+                        else:
+                            await update.message.reply_text(
+                                f"❌ No daily challenge found for {parsed_date.strftime('%B %d, %Y')}.\n\n"
+                                "Daily challenges are only available for dates after the bot was set up.",
+                                parse_mode='Markdown'
+                            )
+                            return
+                except Exception as e:
+                    logger.error(f"Error parsing date query '{date_str}': {e}")
+                    # Continue to next pattern or default handling
+        
+        # Check for "daily challenge" or "challenge" queries without date (show today's)
+        if any(phrase in text_lower for phrase in ['daily challenge', 'daily quiz', 'challenge', 'today challenge']):
+            from daily_quiz import get_today_quiz_question, has_completed_daily_quiz, get_daily_quiz_stats
+            user_id = update.effective_user.id
+            
+            if has_completed_daily_quiz(user_id):
+                stats = get_daily_quiz_stats(user_id)
+                await update.message.reply_text(
+                    f"✅ *Daily Challenge Completed!*\n\n"
+                    f"You've already completed today's challenge!\n\n"
+                    f"*Your Daily Challenge Stats:*\n"
+                    f"• Total Completed: {stats['total_completed']}\n"
+                    f"• Current Streak: {stats['current_streak']} days\n"
+                    f"• Best Score: {stats['best_score']:.1f}%\n\n"
+                    f"Come back tomorrow for a new challenge!",
+                    parse_mode='Markdown',
+                    reply_markup=self.get_quick_actions_keyboard()
+                )
+            else:
+                question = get_today_quiz_question()
+                response = f"⭐ *Daily Challenge Quiz!*\n\n"
+                response += f"*Today's Special Question:*\n{question['question']}\n\n"
+                response += "*Tap your answer below:*"
+                
+                await update.message.reply_text(
+                    response,
+                    parse_mode='Markdown',
+                    reply_markup=self.get_quiz_answer_keyboard(question)
+                )
+            return
+        
         # Default: treat as a Bible question
         # Try to find an answer using the Q&A system
         answer = find_answer(text)
@@ -2625,9 +2708,15 @@ Type the name of a Bible book to find which days include it.
     
     async def _handle_quiz_answer(self, query, callback_data: str, user_id: int):
         """Handle quiz answer callbacks - separated for better organization"""
-        active_quiz = get_quiz_session(user_id)
+        try:
+            active_quiz = get_quiz_session(user_id)
+        except Exception as e:
+            logger.error(f"Error getting quiz session from file for user {user_id}: {e}")
+            active_quiz = None
+        
         if not active_quiz and str(user_id) in self._in_memory_quizzes:
             active_quiz = self._in_memory_quizzes[str(user_id)]
+            logger.info(f"Using in-memory quiz session for user {user_id}")
         
         if not active_quiz:
             await self.safe_edit_message(query, 
@@ -2636,8 +2725,26 @@ Type the name of a Bible book to find which days include it.
             )
             return
         
+        if 'question_data' not in active_quiz:
+            logger.error(f"Active quiz for user {user_id} missing question_data: {active_quiz}")
+            await self.safe_edit_message(query, 
+                "Error: Quiz data is incomplete. Please start a new quiz.",
+                reply_markup=self.get_quick_actions_keyboard()
+            )
+            return
+        
         question_data = active_quiz['question_data']
-        chosen_option_index = int(callback_data.split('_')[-1])
+        
+        # Parse the option index from callback_data (format: quiz_answer_0, quiz_answer_1, etc.)
+        try:
+            chosen_option_index = int(callback_data.split('_')[-1])
+        except (ValueError, IndexError) as e:
+            logger.error(f"Error parsing callback_data '{callback_data}': {e}")
+            await self.safe_edit_message(query, 
+                "Error processing your answer. Please try again.",
+                reply_markup=self.get_quick_actions_keyboard()
+            )
+            return
         
         is_correct = (chosen_option_index == question_data['correct'])
         new_score = active_quiz['score'] + (1 if is_correct else 0)
@@ -2860,7 +2967,12 @@ Type the name of a Bible book to find which days include it.
     async def handle_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle inline button callbacks - routes to specific handler methods"""
         query = update.callback_query
-        await query.answer()  # Acknowledge the callback
+        
+        # Answer the callback immediately to prevent timeout
+        try:
+            await query.answer()
+        except Exception as e:
+            logger.error(f"Error answering callback: {e}")
         
         user_id = query.from_user.id
         self._ensure_subscribed(user_id)
@@ -2874,11 +2986,14 @@ Type the name of a Bible book to find which days include it.
                 logger.debug(f"Routing {callback_data} to _handle_menu_callback")
                 await self._handle_menu_callback(query, callback_data, user_id)
             elif callback_data.startswith("quiz_") or callback_data.startswith("daily_quiz_"):
+                logger.debug(f"Routing {callback_data} to _handle_quiz_callback")
                 await self._handle_quiz_callback(query, callback_data, user_id)
             elif callback_data.startswith("reading_"):
+                logger.debug(f"Routing {callback_data} to _handle_reading_callback")
                 await self._handle_reading_callback(query, callback_data, user_id)
             else:
                 # Unknown callback - return to main menu
+                logger.warning(f"Unknown callback data: {callback_data}")
                 await self.safe_edit_message(query, 
                     "📱 *Main Menu*\n\nChoose an option:",
                     parse_mode='Markdown',

@@ -82,6 +82,16 @@ def get_today_quiz_question():
     
     return question
 
+def get_quiz_question_for_date(target_date):
+    """Get daily quiz question for a specific date"""
+    data = load_daily_quiz_data()
+    date_key = target_date.isoformat() if isinstance(target_date, date) else target_date
+    
+    if 'daily_quizzes' in data and date_key in data['daily_quizzes']:
+        return data['daily_quizzes'][date_key]
+    
+    return None
+
 def mark_daily_quiz_completed(user_id, score, total):
     """Mark daily quiz as completed for a user"""
     today = date.today().isoformat()
